@@ -29,7 +29,11 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "Maven.gitdock-auth [clean].executor": "Run",
+    "Maven.gitdock-auth [install].executor": "Run",
     "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "Notification.DisplayName-DoNotAsk-DatabaseConfigFileWatcher.found": "New/updated database configurations found",
+    "Notification.DoNotAsk-DatabaseConfigFileWatcher.found": "true",
     "RequestMappingsPanelOrder0": "0",
     "RequestMappingsPanelOrder1": "1",
     "RequestMappingsPanelWidth0": "75",
@@ -39,6 +43,7 @@
     "Spring Boot.GitdockAuthApplication.executor": "Run",
     "Spring Boot.GitdockDiscoveryApplication.executor": "Run",
     "Spring Boot.GitdockGatewayApplication.executor": "Run",
+    "ignore.virus.scanning.warn.message": "true",
     "kotlin-language-version-configured": "true",
     "last_opened_file_path": "C:/Users/dell-info/Desktop/gitdock-api/backend/gitdock-backend/gitdock-auth/src/main/resources/templates",
     "node.js.detected.package.eslint": "true",
@@ -50,7 +55,7 @@
     "project.structure.proportion": "0.15",
     "project.structure.side.proportion": "0.46896553",
     "run.configurations.included.in.services": "true",
-    "settings.editor.selected.configurable": "reference.projectsettings.compiler.javacompiler",
+    "settings.editor.selected.configurable": "preferences.pluginManager",
     "ts.external.directory.path": "C:\\Program Files\\JetBrains\\IntelliJ IDEA 2025.2.5\\plugins\\javascript-plugin\\jsLanguageServicesImpl\\external",
     "vue.rearranger.settings.migration": "true"
   },
@@ -83,6 +88,8 @@
           <value>
             <map>
               <entry key="GitdockAuthApplication" value="STOPPED" />
+              <entry key="GitdockDiscoveryApplication" value="STOPPED" />
+              <entry key="GitdockGatewayApplication" value="STOPPED" />
             </map>
           </value>
         </entry>
@@ -140,7 +147,10 @@
       <updated>1770497367262</updated>
       <workItem from="1770497368599" duration="2575000" />
       <workItem from="1770500006208" duration="961000" />
-      <workItem from="1770500999439" duration="19974000" />
+      <workItem from="1770500999439" duration="20470000" />
+      <workItem from="1770656891844" duration="2632000" />
+      <workItem from="1770665013559" duration="2060000" />
+      <workItem from="1770667115801" duration="2334000" />
     </task>
     <servers />
   </component>
