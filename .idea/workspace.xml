@@ -36,8 +36,8 @@
     "Notification.DoNotAsk-DatabaseConfigFileWatcher.found": "true",
     "RequestMappingsPanelOrder0": "0",
     "RequestMappingsPanelOrder1": "1",
-    "RequestMappingsPanelWidth0": "75",
-    "RequestMappingsPanelWidth1": "75",
+    "RequestMappingsPanelWidth0": "545",
+    "RequestMappingsPanelWidth1": "544",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
     "Spring Boot.GitdockAuthApplication.executor": "Run",
@@ -150,7 +150,8 @@
       <workItem from="1770500999439" duration="20470000" />
       <workItem from="1770656891844" duration="2632000" />
       <workItem from="1770665013559" duration="2060000" />
-      <workItem from="1770667115801" duration="2334000" />
+      <workItem from="1770667115801" duration="4723000" />
+      <workItem from="1770759064431" duration="3880000" />
     </task>
     <servers />
   </component>
