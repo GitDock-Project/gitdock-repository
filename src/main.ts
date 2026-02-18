@@ -1,19 +1,57 @@
 import { createApp } from 'vue'
 import App from './App.vue'
-import './style.css'   // ✅ AJOUTE CETTE LIGNE
+import './style.css'
 
 import '@fortawesome/fontawesome-free/css/all.min.css'
 
 import 'vuetify/styles'
 import { createVuetify } from 'vuetify'
-import * as components from 'vuetify/components'
-import * as directives from 'vuetify/directives'
+
+// Importer uniquement les composants utilisés
+import {
+  VApp,
+  VMain,
+  VContainer,
+  VRow,
+  VCol,
+  VNavigationDrawer,
+  VAvatar,
+  VTextField,
+  VBtn,
+  VIcon,
+  VList,
+  VListItem,
+  VCard,
+  VProgressLinear,
+  VDataTable
+} from 'vuetify/components'
+
+// Importer uniquement les directives utilisées
+import { Ripple } from 'vuetify/directives'
 
 import { router } from './router/router'
 
 const vuetify = createVuetify({
-  components,
-  directives,
+  components: {
+    VApp,
+    VMain,
+    VContainer,
+    VRow,
+    VCol,
+    VNavigationDrawer,
+    VAvatar,
+    VTextField,
+    VBtn,
+    VIcon,
+    VList,
+    VListItem,
+    VCard,
+    VProgressLinear,
+    VDataTable
+  },
+  directives: {
+    Ripple
+  }
 })
 
 createApp(App)
