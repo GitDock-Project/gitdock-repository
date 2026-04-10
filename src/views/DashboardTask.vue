@@ -36,18 +36,18 @@
             />
           </div>
 
-          <router-link to="/addtask" style="text-decoration: none; width: 100%;">
-  <v-btn
-    color="#1d4ed8"
-    rounded="pill"
-    block
-    class="text-none font-weight-bold"
-    style="box-shadow: 0 6px 12px rgba(29,78,216,0.25);"
-    prepend-icon="fa fa-plus"
-  >
-    Assign Task
-  </v-btn>
-</router-link>
+          <!-- Assign Task Button -->
+          <v-btn
+            color="#1d4ed8"
+            rounded="pill"
+            block
+            class="text-none font-weight-bold"
+            style="box-shadow: 0 6px 12px rgba(29,78,216,0.25);"
+            prepend-icon="fa fa-plus"
+          >
+            Assign Task
+          </v-btn>
+
           <!-- Four percentage circles -->
           <div class="d-flex justify-space-between">
             <div
@@ -154,7 +154,7 @@
             </v-col>
           </v-row>
 
-          <!-- Recent Activity Table with Edit/Delete Buttons -->
+          <!-- Recent Activity Table -->
           <v-card variant="outlined" class="pa-6 rounded-2xl" style="background: #f9fcff; border-color: #edf2f7;">
             <div class="d-flex justify-space-between align-center mb-3">
               <span class="font-weight-semibold" style="color: #1e293b;">Recent Activity</span>
@@ -170,30 +170,32 @@
                   <th class="text-left pb-3">Time</th>
                   <th class="text-left pb-3">Manager</th>
                   <th class="text-left pb-3">Collaborator</th>
-                  <th class="text-left pb-3">Options</th>
                 </tr>
               </thead>
               <tbody style="color: #1e2b3e;">
-                <tr v-for="(task, index) in tasks" :key="index" style="border-bottom: 1px solid #eaedf2;">
-                  <td>{{ task.name }}</td>
-                  <td>
-                    <v-chip size="small" :color="task.color" text-color="white">{{ task.status }}</v-chip>
-                  </td>
-                  <td>{{ task.user }}</td>
-                  <td>{{ task.time }}</td>
-                  <td>{{ task.manager || '—' }}</td>
-                  <td>{{ task.collaborator || '—' }}</td>
-                  <td class="d-flex gap-2">
-                    <v-btn small color="#3b82f6" text @click="editTask(index)">
-                      Edit
-                    </v-btn>
-                    <v-btn small color="#ef4444" text @click="deleteTask(index)">
-                      Delete
-                    </v-btn>
-                  </td>
+                <tr style="border-bottom: 1px solid #eaedf2;">
+                  <td>Fix navigation bug on mobile</td>
+                  <td><v-chip size="small" color="primary" text-color="white">Moved to Done</v-chip></td>
+                  <td>Sarah Chen</td>
+                  <td>2m ago</td>
+                  <td>Alex Morgan</td>
+                  <td style="color: #b8c9dd;">—</td>
+                </tr>
+                <tr>
+                  <td>Update API documentation</td>
+                  <td><v-chip size="small" color="#9333ea" text-color="white">Commented</v-chip></td>
+                  <td>Mike Ross</td>
+                  <td>15m ago</td>
+                  <td style="color: #b8c9dd;">—</td>
+                  <td style="color: #b8c9dd;">—</td>
                 </tr>
               </tbody>
             </v-simple-table>
+
+            <div class="d-flex gap-6 text-caption mt-4 pl-2" style="color: #a0b8d0;">
+              <span><i class="fa fa-user-tie mr-1"></i> Manager: Alex Morgan (on first task)</span>
+              <span><i class="fa fa-user-friends mr-1"></i> Collaborator: —</span>
+            </div>
           </v-card>
         </main>
       </v-sheet>
@@ -202,13 +204,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import axios from 'axios'
-import { useRouter } from 'vue-router' // ✅ AJOUT
+import { ref } from 'vue'
 
-const router = useRouter() // ✅ AJOUT
-
-// ---------------- Circles ----------------
+// Circles
 const circles = [
   { value: '12%' },
   { value: '5%' },
@@ -223,17 +221,18 @@ const circleBorderStyle = (index: number) => {
     { top: '#a855f7', right: '#a855f7', left: 'transparent', bottom: 'transparent' },
     { left: '#10b981', bottom: '#10b981', right: 'transparent', top: 'transparent' }
   ]
-  return {
-    borderTopColor: borders[index]?.top ?? 'transparent',
-    borderLeftColor: borders[index]?.left ?? 'transparent',
-    borderRightColor: borders[index]?.right ?? 'transparent',
-    borderBottomColor: borders[index]?.bottom ?? 'transparent',
-    borderWidth: '3px',
-    borderStyle: 'solid'
-  }
+ return {
+  borderTopColor: borders[index]?.top ?? 'transparent',
+  borderLeftColor: borders[index]?.left ?? 'transparent',
+  borderRightColor: borders[index]?.right ?? 'transparent',
+  borderBottomColor: borders[index]?.bottom ?? 'transparent',
+  borderWidth: '3px',
+  borderStyle: 'solid'
 }
 
-// ---------------- Navigation ----------------
+}
+
+// Navigation items
 const navItems = [
   { title: 'Dashboard', icon: 'fa fa-tachometer-alt' },
   { title: 'Projects', icon: 'fa fa-project-diagram' },
@@ -242,7 +241,7 @@ const navItems = [
   { title: 'Settings', icon: 'fa fa-cog' }
 ]
 
-// ---------------- Stats ----------------
+// Stats cards
 const stats = [
   { title: 'TOTAL TASKS', value: 128 },
   { title: 'IN PROGRESS', value: 34 },
@@ -250,73 +249,17 @@ const stats = [
   { title: 'OVERDUE', value: 12 }
 ]
 
-// ---------------- Task Bars ----------------
+// Task bars colors/heights
 const taskBars = [
   { color: '#f97316', height: 28 },
   { color: '#3b82f6', height: 21 },
   { color: '#22c55e', height: 14 }
 ]
 
-// ---------------- Weekly Heights ----------------
+// Weekly heights
 const weeklyHeights = [42, 28, 56, 34, 62, 25, 47]
-
-// ---------------- Task Interface ----------------
-interface Task {
-  id: number
-  name: string
-  status: string
-  color: string
-  user: string
-  time: string
-  manager?: string
-  collaborator?: string
-}
-
-// ---------------- Tasks ----------------
-const tasks = ref<Task[]>([])
-
-// ---------------- ✅ EDIT (CORRIGÉ) ----------------
-const editTask = (index: number) => {
-  const task = tasks.value[index]
-  if (!task) return
-
-  // ✅ REDIRECTION VERS PAGE EDIT
-  router.push(`/tasks/edit/${task.id}`)
-}
-
-// ---------------- Delete Task ----------------
-const deleteTask = (index: number) => {
-  const task = tasks.value[index]
-  if (!task) return
-  if (confirm(`Are you sure you want to delete: ${task.name}?`)) {
-    tasks.value.splice(index, 1)
-    alert(`Task "${task.name}" deleted successfully!`)
-  }
-}
-
-// ---------------- Fetch Tasks ----------------
-onMounted(async () => {
-  try {
-    const response = await axios.get('http://localhost/api/tasks')
-
-    tasks.value = response.data.map((t: any) => ({
-      id: t.id,
-      name: t.title ?? '—',
-      status: t.status ?? 'To Do',
-      color:
-        t.status === 'Done'
-          ? '#22c55e'
-          : t.status === 'In Progress'
-          ? '#3b82f6'
-          : '#f97316',
-      user: t.assignedTo ?? '—',
-      time: t.dueDate ? new Date(t.dueDate).toLocaleString() : '—',
-      manager: t.assignedBy ?? '—',
-      collaborator: t.collaborator ?? '—'
-    }))
-
-  } catch (error) {
-    console.error('Erreur lors du fetch des tâches:', error)
-  }
-})
 </script>
+
+<style scoped>
+/* Aucun style supplémentaire nécessaire, tout est inline ou via Vuetify */
+</style>
