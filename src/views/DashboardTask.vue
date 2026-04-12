@@ -107,36 +107,65 @@
           <!-- Charts Row -->
           <v-row dense>
             <!-- Task Distribution -->
-            <v-col cols="12" md="6">
-              <v-card variant="outlined" class="pa-6 rounded-2xl" style="background: #f9fcff; border-color: #edf2f7;">
-                <div class="d-flex justify-space-between align-center mb-5">
-                  <span class="font-weight-semibold" style="color: #1e293b;">Task Distribution</span>
-                  <a href="#" class="text-primary text-caption font-medium" style="text-decoration: none;">View All</a>
-                </div>
-                <div class="d-flex flex-column gap-2">
-                  <div class="d-flex align-center gap-2" style="color: #2d3f59;">
-                    <v-avatar size="12" color="#f97316" class="rounded-circle"></v-avatar>
-                    To Do
-                    <span class="ml-auto font-weight-bold">28</span>
-                  </div>
-                  <div class="d-flex align-center gap-2" style="color: #2d3f59;">
-                    <v-avatar size="12" color="#3b82f6" class="rounded-circle"></v-avatar>
-                    In Progress
-                    <span class="ml-auto font-weight-bold">21</span>
-                  </div>
-                  <div class="d-flex align-center gap-2" style="color: #2d3f59;">
-                    <v-avatar size="12" color="#22c55e" class="rounded-circle"></v-avatar>
-                    Done
-                    <span class="ml-auto font-weight-bold">14</span>
-                  </div>
-                </div>
-                <div class="d-flex align-end gap-3 mt-5" style="height: 60px;">
-                  <div v-for="bar in taskBars" :key="bar.color" class="flex-grow-1 rounded-xl" style="background: #e6edf4; display: flex; align-items: flex-end;">
-                    <div class="w-100 rounded-xl" :style="{ height: bar.height + 'px', background: bar.color }"></div>
-                  </div>
-                </div>
-              </v-card>
-            </v-col>
+<v-col cols="12" md="6">
+  <v-card variant="outlined" class="pa-6 rounded-2xl" style="background: #f9fcff; border-color: #edf2f7;">
+    <div class="d-flex justify-space-between align-center mb-5">
+      <span class="font-weight-semibold" style="color: #1e293b;">Task Distribution</span>
+      <router-link
+        to="/TaskAll"
+        class="text-primary text-caption font-medium"
+        style="text-decoration: none;"
+      >
+        View All
+      </router-link>
+    </div>
+
+    <div class="d-flex flex-column gap-2">
+      <!-- To Do -->
+      <div class="d-flex align-center gap-2" style="color: #2d3f59;">
+        <v-avatar size="12" color="#f97316" class="rounded-circle"></v-avatar>
+        To Do
+        <span class="ml-auto font-weight-bold">
+          {{ getStatusCount('To Do') }}
+        </span>
+      </div>
+
+      <!-- In Progress -->
+      <div class="d-flex align-center gap-2" style="color: #2d3f59;">
+        <v-avatar size="12" color="#3b82f6" class="rounded-circle"></v-avatar>
+        In Progress
+        <span class="ml-auto font-weight-bold">
+          {{ getStatusCount('In Progress') }}
+        </span>
+      </div>
+
+      <!-- Done -->
+      <div class="d-flex align-center gap-2" style="color: #2d3f59;">
+        <v-avatar size="12" color="#22c55e" class="rounded-circle"></v-avatar>
+        Done
+        <span class="ml-auto font-weight-bold">
+          {{ getStatusCount('Done') }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Bars (optionnel dynamique) -->
+    <div class="d-flex align-end gap-3 mt-5" style="height: 60px;">
+      <div
+        v-for="bar in taskBars"
+        :key="bar.color"
+        class="flex-grow-1 rounded-xl"
+        style="background: #e6edf4; display: flex; align-items: flex-end;"
+      >
+        <div
+          class="w-100 rounded-xl"
+          :style="{ height: bar.height + 'px', background: bar.color }"
+        ></div>
+      </div>
+    </div>
+
+  </v-card>
+</v-col>
 
             <!-- Weekly Completion Rate -->
             <v-col cols="12" md="6">
@@ -202,13 +231,22 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import axios from 'axios'
-import { useRouter } from 'vue-router' // ✅ AJOUT
+import { useRouter } from 'vue-router'
 
-const router = useRouter() // ✅ AJOUT
+const router = useRouter()
 
-// ---------------- Circles ----------------
+// ---------------- NAV ----------------
+const navItems = [
+  { title: 'Dashboard', icon: 'fa fa-tachometer-alt' },
+  { title: 'Projects', icon: 'fa fa-project-diagram' },
+  { title: 'Tasks', icon: 'fa fa-tasks' },
+  { title: 'Users', icon: 'fa fa-users' },
+  { title: 'Settings', icon: 'fa fa-cog' }
+]
+
+// ---------------- UI ----------------
 const circles = [
   { value: '12%' },
   { value: '5%' },
@@ -216,13 +254,22 @@ const circles = [
   { value: '8%' }
 ]
 
+const taskBars = ref([
+  { color: '#f97316', height: 28 },
+  { color: '#3b82f6', height: 21 },
+  { color: '#22c55e', height: 14 }
+])
+
+const weeklyHeights = ref([42, 28, 56, 34, 62, 25, 47])
+
 const circleBorderStyle = (index: number) => {
   const borders = [
-    { top: '#f97316', left: '#f97316', right: 'transparent', bottom: 'transparent' },
-    { right: '#3b82f6', bottom: '#3b82f6', left: 'transparent', top: 'transparent' },
-    { top: '#a855f7', right: '#a855f7', left: 'transparent', bottom: 'transparent' },
-    { left: '#10b981', bottom: '#10b981', right: 'transparent', top: 'transparent' }
+    { top: '#f97316', left: '#f97316' },
+    { right: '#3b82f6', bottom: '#3b82f6' },
+    { top: '#a855f7', right: '#a855f7' },
+    { left: '#10b981', bottom: '#10b981' }
   ]
+
   return {
     borderTopColor: borders[index]?.top ?? 'transparent',
     borderLeftColor: borders[index]?.left ?? 'transparent',
@@ -233,34 +280,7 @@ const circleBorderStyle = (index: number) => {
   }
 }
 
-// ---------------- Navigation ----------------
-const navItems = [
-  { title: 'Dashboard', icon: 'fa fa-tachometer-alt' },
-  { title: 'Projects', icon: 'fa fa-project-diagram' },
-  { title: 'Tasks', icon: 'fa fa-tasks' },
-  { title: 'Users', icon: 'fa fa-users' },
-  { title: 'Settings', icon: 'fa fa-cog' }
-]
-
-// ---------------- Stats ----------------
-const stats = [
-  { title: 'TOTAL TASKS', value: 128 },
-  { title: 'IN PROGRESS', value: 34 },
-  { title: 'COMPLETED', value: 82 },
-  { title: 'OVERDUE', value: 12 }
-]
-
-// ---------------- Task Bars ----------------
-const taskBars = [
-  { color: '#f97316', height: 28 },
-  { color: '#3b82f6', height: 21 },
-  { color: '#22c55e', height: 14 }
-]
-
-// ---------------- Weekly Heights ----------------
-const weeklyHeights = [42, 28, 56, 34, 62, 25, 47]
-
-// ---------------- Task Interface ----------------
+// ---------------- TASK TYPE ----------------
 interface Task {
   id: number
   name: string
@@ -272,34 +292,35 @@ interface Task {
   collaborator?: string
 }
 
-// ---------------- Tasks ----------------
+// ---------------- STATE ----------------
 const tasks = ref<Task[]>([])
 
-// ---------------- ✅ EDIT (CORRIGÉ) ----------------
-const editTask = (index: number) => {
-  const task = tasks.value[index]
-  if (!task) return
+const stats = ref([
+  { title: 'TOTAL TASKS', value: 0 },
+  { title: 'IN PROGRESS', value: 0 },
+  { title: 'COMPLETED', value: 0 },
+  { title: 'OVERDUE', value: 0 }
+])
 
-  // ✅ REDIRECTION VERS PAGE EDIT
-  router.push(`/tasks/edit/${task.id}`)
-}
+// ✅ COUNTERS (POUR TON UI)
+const todoCount = computed(() =>
+  tasks.value.filter(t => t.status === 'To Do').length
+)
 
-// ---------------- Delete Task ----------------
-const deleteTask = (index: number) => {
-  const task = tasks.value[index]
-  if (!task) return
-  if (confirm(`Are you sure you want to delete: ${task.name}?`)) {
-    tasks.value.splice(index, 1)
-    alert(`Task "${task.name}" deleted successfully!`)
-  }
-}
+const inProgressCount = computed(() =>
+  tasks.value.filter(t => t.status === 'In Progress').length
+)
 
-// ---------------- Fetch Tasks ----------------
-onMounted(async () => {
+const doneCount = computed(() =>
+  tasks.value.filter(t => t.status === 'Done').length
+)
+
+// ---------------- FETCH TASKS ----------------
+const fetchTasks = async () => {
   try {
-    const response = await axios.get('http://localhost/api/tasks')
+    const res = await axios.get('http://localhost/api/tasks')
 
-    tasks.value = response.data.map((t: any) => ({
+    tasks.value = res.data.map((t: any) => ({
       id: t.id,
       name: t.title ?? '—',
       status: t.status ?? 'To Do',
@@ -310,13 +331,54 @@ onMounted(async () => {
           ? '#3b82f6'
           : '#f97316',
       user: t.assignedTo ?? '—',
-      time: t.dueDate ? new Date(t.dueDate).toLocaleString() : '—',
+      time: t.dueDate
+        ? new Date(t.dueDate).toLocaleString()
+        : '—',
+
+      // ✅ FIX IMPORTANT
       manager: t.assignedBy ?? '—',
       collaborator: t.collaborator ?? '—'
     }))
 
+    updateStats()
   } catch (error) {
-    console.error('Erreur lors du fetch des tâches:', error)
+    console.error('API error:', error)
   }
+}
+
+// ---------------- UPDATE STATS ----------------
+const updateStats = () => {
+  stats.value = [
+    { title: 'TOTAL TASKS', value: tasks.value.length },
+    { title: 'IN PROGRESS', value: inProgressCount.value },
+    { title: 'COMPLETED', value: doneCount.value },
+    { title: 'OVERDUE', value: getStatusCount('Overdue') }
+  ]
+}
+
+// ---------------- SAFE COUNT ----------------
+const getStatusCount = (status: string) => {
+  return tasks.value.filter(t => t.status === status).length
+}
+
+// ---------------- EDIT ----------------
+const editTask = (index: number) => {
+  const task = tasks.value[index]
+  if (!task) return
+  router.push(`/tasks/edit/${task.id}`)
+}
+
+// ---------------- DELETE ----------------
+const deleteTask = (index: number) => {
+  const task = tasks.value[index]
+  if (!task) return
+
+  tasks.value.splice(index, 1)
+  updateStats()
+}
+
+// ---------------- INIT ----------------
+onMounted(() => {
+  fetchTasks()
 })
 </script>

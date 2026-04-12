@@ -4,6 +4,7 @@ import type { RouteRecordRaw } from "vue-router";
 import DashboardTask from "../views/DashboardTask.vue";
 import AddTask from "../views/AddTask.vue";
 import UpdateTask from "../views/UpdateTask.vue";
+import TaskAll from "../views/ViewTask/TaskAll.vue";
 
 const routes: Array<RouteRecordRaw> = [
   { path: "/", redirect: "/dashboardtask" },
@@ -19,10 +20,10 @@ const routes: Array<RouteRecordRaw> = [
   },
 
   // Nouvelle route pour DeleteTask
+  
   {
-    path: "/tasks/delete/:id",
-    name: "DeleteTask",
-    component: () => import("../views/DeleteTask.vue")
+    path: "/TaskAll",
+    component: () => import("../views/ViewTask/TaskAll.vue")
   }
 ];
 
