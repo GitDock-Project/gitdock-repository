@@ -31,6 +31,8 @@
   "keyToString": {
     "Maven.gitdock-auth [clean].executor": "Run",
     "Maven.gitdock-auth [install].executor": "Run",
+    "Maven.gitdock-backend [clean].executor": "Run",
+    "Maven.gitdock-backend [install].executor": "Run",
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "Notification.DisplayName-DoNotAsk-DatabaseConfigFileWatcher.found": "New/updated database configurations found",
     "Notification.DoNotAsk-DatabaseConfigFileWatcher.found": "true",
@@ -43,6 +45,8 @@
     "Spring Boot.GitdockAuthApplication.executor": "Run",
     "Spring Boot.GitdockDiscoveryApplication.executor": "Run",
     "Spring Boot.GitdockGatewayApplication.executor": "Run",
+    "Spring Boot.GitdockProjectApplication.executor": "Run",
+    "Spring Boot.GitdockSyncApplication.executor": "Run",
     "ignore.virus.scanning.warn.message": "true",
     "kotlin-language-version-configured": "true",
     "last_opened_file_path": "C:/Users/dell-info/Desktop/gitdock-api/backend/gitdock-backend/gitdock-auth/src/main/resources/templates",
@@ -55,7 +59,7 @@
     "project.structure.proportion": "0.15",
     "project.structure.side.proportion": "0.46896553",
     "run.configurations.included.in.services": "true",
-    "settings.editor.selected.configurable": "preferences.pluginManager",
+    "settings.editor.selected.configurable": "reference.projectsettings.compiler.annotationProcessors",
     "ts.external.directory.path": "C:\\Program Files\\JetBrains\\IntelliJ IDEA 2025.2.5\\plugins\\javascript-plugin\\jsLanguageServicesImpl\\external",
     "vue.rearranger.settings.migration": "true"
   },
@@ -73,6 +77,8 @@
       <recent name="C:\Users\dell-info\Desktop\gitdock-api\backend\gitdock-backend\gitdock-auth\src\main\resources\templates" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\dell-info\Desktop\gitdock-api\backend" />
+      <recent name="C:\Users\dell-info\Desktop\gitdock-api\backend\gitdock-backend" />
       <recent name="C:\Users\dell-info\Desktop\gitdock-api\frontend\gitdock-frontend\src\components\auth" />
     </key>
   </component>
@@ -93,13 +99,15 @@
               <entry key="GitdockAuthApplication" value="STOPPED" />
               <entry key="GitdockDiscoveryApplication" value="STOPPED" />
               <entry key="GitdockGatewayApplication" value="STOPPED" />
+              <entry key="GitdockProjectApplication" value="STOPPED" />
+              <entry key="GitdockSyncApplication" value="STOPPED" />
             </map>
           </value>
         </entry>
       </map>
     </option>
   </component>
-  <component name="RunManager" selected="Spring Boot.GitdockAuthApplication">
+  <component name="RunManager" selected="Spring Boot.GitdockGatewayApplication">
     <configuration name="GitdockAuthApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" temporary="true" nameIsGenerated="true">
       <module name="gitdock-auth" />
       <option name="SPRING_BOOT_MAIN_CLASS" value="edu.ehei.gitdock.gitdockauth.GitdockAuthApplication" />
@@ -123,6 +131,20 @@
     <configuration name="GitdockGatewayApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
       <module name="gitdock-gateway" />
       <option name="SPRING_BOOT_MAIN_CLASS" value="edu.ehei.gitdock.gitdockgateway.GitdockGatewayApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="GitdockProjectApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <module name="gitdock-project" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="edu.ehei.gitdock.gitdockproject.GitdockProjectApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="GitdockSyncApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <module name="gitdock-sync" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="edu.ehei.gitdock.gitdocksync.GitdockSyncApplication" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
@@ -154,7 +176,12 @@
       <workItem from="1770656891844" duration="2632000" />
       <workItem from="1770665013559" duration="2060000" />
       <workItem from="1770667115801" duration="4723000" />
-      <workItem from="1770759064431" duration="6622000" />
+      <workItem from="1770759064431" duration="12793000" />
+      <workItem from="1772058636912" duration="2588000" />
+      <workItem from="1772317679586" duration="1904000" />
+      <workItem from="1775437258804" duration="6409000" />
+      <workItem from="1775445149685" duration="306000" />
+      <workItem from="1775502668767" duration="10304000" />
     </task>
     <servers />
   </component>
