@@ -7,9 +7,11 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="gitdock-discovery" />
         <module name="gitdock-gateway" />
+        <module name="gitdock-sync" />
         <module name="gitdock-auth" />
+        <module name="gitdock-project" />
+        <module name="gitdock-discovery" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel target="17" />
@@ -19,6 +21,8 @@
       <module name="gitdock-auth" options="-parameters" />
       <module name="gitdock-discovery" options="-parameters" />
       <module name="gitdock-gateway" options="-parameters" />
+      <module name="gitdock-project" options="-parameters" />
+      <module name="gitdock-sync" options="-parameters" />
     </option>
   </component>
 </project>
