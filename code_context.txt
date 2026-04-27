@@ -1,0 +1,810 @@
+// File: gitdock-sync/HELP.md
+
+# Getting Started
+
+### Reference Documentation
+
+For further reference, please consider the following sections:
+
+* [Official Apache Maven documentation](https://maven.apache.org/guides/index.html)
+* [Spring Boot Maven Plugin Reference Guide](https://docs.spring.io/spring-boot/4.0.5/maven-plugin)
+* [Create an OCI image](https://docs.spring.io/spring-boot/4.0.5/maven-plugin/build-image.html)
+
+### Maven Parent overrides
+
+Due to Maven's design, elements are inherited from the parent POM to the project POM.
+While most of the inheritance is fine, it also inherits unwanted elements like `<license>` and `<developers>` from the
+parent.
+To prevent this, the project POM contains empty overrides for these elements.
+If you manually switch to a different parent and actually want the inheritance, you need to remove those overrides.
+
+
+
+------------------------------------------------------------
+
+// File: gitdock-sync/src/main/java/edu/ehei/gitdock/gitdocksync/client/AuthServiceClient.java
+
+package edu.ehei.gitdock.gitdocksync.client;
+
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+@FeignClient(name = "gitdock-auth", path = "/api/auth/oauth")
+public interface AuthServiceClient {
+    @GetMapping("/internal/token")
+    String getGithubToken(@RequestParam("userId") Long userId);
+}
+
+------------------------------------------------------------
+
+// File: gitdock-sync/src/main/java/edu/ehei/gitdock/gitdocksync/config/RabbitMQConfig.java
+
+package edu.ehei.gitdock.gitdocksync.config; // ⚠️ À adapter pour gitdock-sync
+
+import org.springframework.amqp.core.*;
+import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
+import org.springframework.amqp.support.converter.MessageConverter;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class RabbitMQConfig {
+
+    public static final String EXCHANGE_NAME = "gitdock.exchange";
+    public static final String QUEUE_SYNC_REQUEST = "gitdock.sync.request.queue";
+    public static final String QUEUE_SYNC_RESULT = "gitdock.sync.result.queue";
+    public static final String ROUTING_KEY_REQUEST = "sync.request";
+    public static final String ROUTING_KEY_RESULT = "sync.result";
+    public static final String ROUTING_KEY_NOTIFICATION = "notification.routing.key";
+    public static final String ROUTING_KEY_WEBHOOK = "webhook.result";
+
+    @Bean
+    public TopicExchange gitdockExchange() {
+        return new TopicExchange(EXCHANGE_NAME);
+    }
+
+    @Bean
+    public Queue syncRequestQueue() {
+        return new Queue(QUEUE_SYNC_REQUEST, true); // true = durable
+    }
+
+    @Bean
+    public Queue syncResultQueue() {
+        return new Queue(QUEUE_SYNC_RESULT, true);
+    }
+
+    @Bean
+    public Binding bindingRequest(Queue syncRequestQueue, TopicExchange gitdockExchange) {
+        return BindingBuilder.bind(syncRequestQueue).to(gitdockExchange).with(ROUTING_KEY_REQUEST);
+    }
+
+    @Bean
+    public Binding bindingResult(Queue syncResultQueue, TopicExchange gitdockExchange) {
+        return BindingBuilder.bind(syncResultQueue).to(gitdockExchange).with(ROUTING_KEY_RESULT);
+    }
+
+    // Indispensable pour que RabbitMQ sérialise nos objets Java en JSON (et inversement)
+    @Bean
+    public MessageConverter jsonMessageConverter() {
+        return new Jackson2JsonMessageConverter();
+    }
+}
+
+------------------------------------------------------------
+
+// File: gitdock-sync/src/main/java/edu/ehei/gitdock/gitdocksync/controller/WebhookController.java
+
+package edu.ehei.gitdock.gitdocksync.controller;
+
+import edu.ehei.gitdock.gitdocksync.dto.GithubWebhookPayload;
+import edu.ehei.gitdock.gitdocksync.service.WebhookService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/sync/webhooks")
+@RequiredArgsConstructor
+@Slf4j
+public class WebhookController {
+
+    private final WebhookService webhookService;
+
+    @PostMapping("/github")
+    public ResponseEntity<String> handleGithubWebhook(
+            @RequestHeader(value = "X-GitHub-Event", required = false) String eventType,
+            @RequestBody GithubWebhookPayload payload) {
+
+        log.info("📥 Webhook GitHub reçu ! Type d'événement : {}", eventType);
+
+        // On ne traite que les événements de type "push" pour l'instant
+        if ("push".equals(eventType)) {
+            webhookService.processGithubPush(payload);
+        }
+
+        return ResponseEntity.ok("Webhook reçu et traité");
+    }
+}
+
+------------------------------------------------------------
+
+// File: gitdock-sync/src/main/java/edu/ehei/gitdock/gitdocksync/dto/GithubBranchResponseDTO.java
+
+package edu.ehei.gitdock.gitdocksync.dto;
+import lombok.Data;
+
+@Data
+public class GithubBranchResponseDTO {
+    private String name;
+    private CommitInfo commit;
+
+    @Data
+    public static class CommitInfo {
+        private String sha;
+        private String url;
+    }
+}
+
+
+------------------------------------------------------------
+
+// File: gitdock-sync/src/main/java/edu/ehei/gitdock/gitdocksync/dto/GithubCommitResponseDTO.java
+
+package edu.ehei.gitdock.gitdocksync.dto;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Data;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+
+@Data
+public class GithubCommitResponseDTO {
+    private String sha;
+    private CommitDetail commit;
+
+    @JsonProperty("html_url")
+    private String htmlUrl;
+
+    private Stats stats;
+
+    @Data
+    public static class CommitDetail {
+        private Author author;
+        private String message;
+    }
+
+    @Data
+    public static class Author {
+        private String name;
+        private String email;
+
+        private OffsetDateTime date;
+    }
+
+
+    @Data
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class Stats {
+        private Integer additions;
+        private Integer deletions;
+        private Integer total;
+    }
+}
+
+
+------------------------------------------------------------
+
+// File: gitdock-sync/src/main/java/edu/ehei/gitdock/gitdocksync/dto/GithubWebhookPayload.java
+
+package edu.ehei.gitdock.gitdocksync.dto;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Data;
+
+import java.util.List;
+
+@Data
+@JsonIgnoreProperties(ignoreUnknown = true) // Très important pour ignorer les 90% du JSON de GitHub qu'on n'utilise pas
+public class GithubWebhookPayload {
+
+    private String ref; // Ex: "refs/heads/main"
+    private Repository repository;
+    private List<Commit> commits;
+
+    @Data
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class Repository {
+        @JsonProperty("html_url")
+        private String htmlUrl; // L'URL du projet pour faire la liaison
+
+        @JsonProperty("full_name")
+        private String fullName; // "owner/repo"
+    }
+
+    @Data
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class Commit {
+        private String id; // Le SHA
+        private String message;
+        private String timestamp;
+        private Author author;
+        private List<String> added;
+        private List<String> removed;
+        private List<String> modified;
+    }
+
+    @Data
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class Author {
+        private String name;
+        private String email;
+    }
+}
+
+------------------------------------------------------------
+
+// File: gitdock-sync/src/main/java/edu/ehei/gitdock/gitdocksync/dto/NotificationEventDTO.java
+
+package edu.ehei.gitdock.gitdocksync.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.util.Map;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class NotificationEventDTO {
+    private Long targetUserId;       // ID de l'utilisateur (0L si Inconnu/Ghost)
+    private String targetEmail;      // L'email (vital pour les nouveaux invités qui n'ont pas encore de vrai compte)
+    private String type;             // ex: "USER_REGISTERED", "PROJECT_INVITATION", "BADGE_EARNED"
+
+    // Un dictionnaire fourre-tout pour passer les variables du template (Prénom, Liens, Nom du projet, etc.)
+    private Map<String, String> payload;
+}
+
+------------------------------------------------------------
+
+// File: gitdock-sync/src/main/java/edu/ehei/gitdock/gitdocksync/dto/SyncRequestMessageDTO.java
+
+package edu.ehei.gitdock.gitdocksync.dto; // ⚠️ À adapter
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+public class SyncRequestMessageDTO {
+    private Long projectId;
+    private String repoUrl;
+    private Long userId;
+    private String platform;
+    private String projectName;
+}
+
+------------------------------------------------------------
+
+// File: gitdock-sync/src/main/java/edu/ehei/gitdock/gitdocksync/dto/SyncResultDTO.java
+
+package edu.ehei.gitdock.gitdocksync.dto;
+import lombok.Builder;
+import lombok.Data;
+import java.util.List;
+
+@Data
+@Builder
+public class SyncResultDTO {
+    private List<GithubBranchResponseDTO> branches;
+    private List<GithubCommitResponseDTO> commits;
+    private String platform;
+    private long durationSeconds;
+    private boolean success;
+    private String errorMessage;
+}
+
+------------------------------------------------------------
+
+// File: gitdock-sync/src/main/java/edu/ehei/gitdock/gitdocksync/dto/SyncResultMessageDTO.java
+
+package edu.ehei.gitdock.gitdocksync.dto; // ⚠️ À adapter
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import java.util.List;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class SyncResultMessageDTO {
+    private Long projectId;
+    private List<GithubBranchResponseDTO> branches;
+    private List<GithubCommitResponseDTO> commits;
+    private boolean success;
+    private String errorMessage;
+    private long durationSeconds;
+    private String repoUrl;
+
+}
+
+------------------------------------------------------------
+
+// File: gitdock-sync/src/main/java/edu/ehei/gitdock/gitdocksync/GitdockSyncApplication.java
+
+package edu.ehei.gitdock.gitdocksync;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+import org.springframework.cloud.openfeign.EnableFeignClients;
+
+@EnableDiscoveryClient
+@EnableFeignClients
+@SpringBootApplication
+public class GitdockSyncApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(GitdockSyncApplication.class, args);
+    }
+
+}
+
+
+------------------------------------------------------------
+
+// File: gitdock-sync/src/main/java/edu/ehei/gitdock/gitdocksync/service/ProjectSyncListener.java
+
+package edu.ehei.gitdock.gitdocksync.service;
+
+import edu.ehei.gitdock.gitdocksync.config.RabbitMQConfig;
+import edu.ehei.gitdock.gitdocksync.dto.NotificationEventDTO;
+import edu.ehei.gitdock.gitdocksync.dto.SyncRequestMessageDTO;
+import edu.ehei.gitdock.gitdocksync.dto.SyncResultDTO;
+import edu.ehei.gitdock.gitdocksync.dto.SyncResultMessageDTO;
+import edu.ehei.gitdock.gitdocksync.strategy.GitPlatformSyncFactory;
+import edu.ehei.gitdock.gitdocksync.strategy.IGitPlatformSyncStrategy;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.stereotype.Service;
+
+import java.util.Map;
+
+@Service
+@RequiredArgsConstructor
+@Slf4j
+public class ProjectSyncListener {
+
+    private final GitPlatformSyncFactory syncFactory; // 👈 On injecte la Factory !
+    private final RabbitTemplate rabbitTemplate;
+
+    @RabbitListener(queues = RabbitMQConfig.QUEUE_SYNC_REQUEST)
+    public void handleSyncRequest(SyncRequestMessageDTO request) {
+        log.info("📥 Ordre de synchronisation reçu pour le projet ID: {} (Platform: {})", request.getProjectId(), request.getPlatform());
+
+        SyncResultMessageDTO response = new SyncResultMessageDTO();
+        response.setProjectId(request.getProjectId());
+
+        try {
+            // 1. La Factory nous donne le bon outil
+            IGitPlatformSyncStrategy strategy = syncFactory.getStrategy(request.getPlatform());
+
+            // 2. L'outil fait le travail
+            SyncResultDTO resultDTO = strategy.fetchProjectData(request.getRepoUrl(), request.getUserId());
+
+            // 3. On prépare la réponse
+            response.setBranches(resultDTO.getBranches());
+            response.setCommits(resultDTO.getCommits());
+            response.setSuccess(resultDTO.isSuccess());
+            response.setErrorMessage(resultDTO.getErrorMessage());
+            response.setDurationSeconds(resultDTO.getDurationSeconds());
+
+            if (resultDTO.isSuccess()) {
+                sendNotificationSyncComplete(request, resultDTO);
+            } else {
+                sendNotificationSyncFailed(request, resultDTO.getErrorMessage());
+            }
+
+        } catch (Exception e) {
+            log.error("❌ Erreur critique d'aspiration: {}", e.getMessage(), e);
+            response.setSuccess(false);
+            response.setErrorMessage(e.getMessage());
+            sendNotificationSyncFailed(request, e.getMessage());
+        }
+
+        // On renvoie le résultat au Listener de gitdock-project
+        rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE_NAME, RabbitMQConfig.ROUTING_KEY_RESULT, response);
+    }
+
+    private void sendNotificationSyncComplete(SyncRequestMessageDTO request, SyncResultDTO result) {
+        try {
+            Map<String, String> payload = Map.of(
+                    "projectName", request.getProjectName() != null ? request.getProjectName() : "Projet Inconnu",
+                    "durationSeconds", String.valueOf(result.getDurationSeconds())
+            );
+
+            NotificationEventDTO notifEvent = NotificationEventDTO.builder()
+                    .targetUserId(request.getUserId())
+                    .type("TYPE_SYNC_COMPLETE")
+                    .payload(payload)
+                    .build();
+
+            rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE_NAME, RabbitMQConfig.ROUTING_KEY_NOTIFICATION, notifEvent);
+
+            // Notification de lenteur si nécessaire
+            if(result.getDurationSeconds() > 10) {
+                NotificationEventDTO delayEvent = NotificationEventDTO.builder()
+                        .targetUserId(request.getUserId())
+                        .type("TYPE_SYNC_DELAYED")
+                        .payload(payload)
+                        .build();
+                rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE_NAME, RabbitMQConfig.ROUTING_KEY_NOTIFICATION, delayEvent);
+            }
+
+        } catch (Exception e) {
+            log.error("⚠️ Impossible d'envoyer la notification", e);
+        }
+    }
+
+    private void sendNotificationSyncFailed(SyncRequestMessageDTO request, String errorMessage) {
+        try {
+            Map<String, String> payload = Map.of(
+                    "projectName", request.getProjectName() != null ? request.getProjectName() : "Projet Inconnu",
+                    "errorMessage", errorMessage
+            );
+
+            NotificationEventDTO notifEvent = NotificationEventDTO.builder()
+                    .targetUserId(request.getUserId())
+                    .type("TYPE_SYNC_FAILED") // Tu pourras rajouter ce type plus tard dans ton enum si tu veux !
+                    .payload(payload)
+                    .build();
+
+            rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE_NAME, RabbitMQConfig.ROUTING_KEY_NOTIFICATION, notifEvent);
+
+        } catch (Exception e) {
+            log.error("⚠️ Impossible d'envoyer la notification", e);
+        }
+    }
+}
+
+------------------------------------------------------------
+
+// File: gitdock-sync/src/main/java/edu/ehei/gitdock/gitdocksync/service/WebhookService.java
+
+package edu.ehei.gitdock.gitdocksync.service;
+
+import edu.ehei.gitdock.gitdocksync.config.RabbitMQConfig;
+import edu.ehei.gitdock.gitdocksync.dto.*;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+@Slf4j
+public class WebhookService {
+
+    private final RabbitTemplate rabbitTemplate;
+
+    public void processGithubPush(GithubWebhookPayload payload) {
+        if (payload.getCommits() == null || payload.getCommits().isEmpty()) {
+            log.info("Push vide (ex: création de branche), rien à faire.");
+            return;
+        }
+
+        String repoUrl = payload.getRepository().getHtmlUrl();
+        log.info("🚀 Traitement d'un Push contenant {} commits pour le repo {}", payload.getCommits().size(), repoUrl);
+
+        // On transforme les commits GitHub en notre format interne GithubCommitResponseDTO
+        List<GithubCommitResponseDTO> normalizedCommits = payload.getCommits().stream().map(webhookCommit -> {
+
+            GithubCommitResponseDTO.Author author = new GithubCommitResponseDTO.Author();
+            author.setName(webhookCommit.getAuthor().getName());
+            author.setEmail(webhookCommit.getAuthor().getEmail());
+            // Les dates GitHub Webhook sont en ISO 8601 avec Timezone (ex: 2024-03-22T14:30:00+01:00)
+            try {
+                // GitHub envoie : "2024-03-22T14:30:00+01:00" (ISO_OFFSET_DATE_TIME)
+                java.time.ZonedDateTime zdt = java.time.ZonedDateTime.parse(webhookCommit.getTimestamp(), java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+                author.setDate(java.time.OffsetDateTime.parse(webhookCommit.getTimestamp()));
+            } catch (Exception e) {
+                author.setDate(java.time.OffsetDateTime.now());
+            }
+
+            GithubCommitResponseDTO.CommitDetail detail = new GithubCommitResponseDTO.CommitDetail();
+            detail.setAuthor(author);
+            detail.setMessage(webhookCommit.getMessage());
+
+            GithubCommitResponseDTO dto = new GithubCommitResponseDTO();
+            dto.setSha(webhookCommit.getId());
+            dto.setCommit(detail);
+
+            return dto;
+        }).collect(Collectors.toList());
+
+        // On crée un message de résultat, mais sans "projectId" car gitdock-sync ne le connaît pas !
+        // C'est gitdock-project qui fera la recherche via le repoUrl.
+        SyncResultMessageDTO message = new SyncResultMessageDTO();
+        message.setSuccess(true);
+        // On n'a pas le projectId, on passe l'URL ! (Attention, il faut ajouter ce champ dans SyncResultMessage)
+        message.setRepoUrl(repoUrl);
+        message.setCommits(normalizedCommits);
+
+        // On utilise une NOUVELLE routing key spécifique pour les webhooks
+        rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE_NAME, RabbitMQConfig.ROUTING_KEY_WEBHOOK, message);
+        log.info("📤 Événement Webhook envoyé à RabbitMQ pour traitement par gitdock-project");
+    }
+}
+
+------------------------------------------------------------
+
+// File: gitdock-sync/src/main/java/edu/ehei/gitdock/gitdocksync/strategy/GitPlatformSyncFactory.java
+
+package edu.ehei.gitdock.gitdocksync.strategy;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+
+@Component
+@RequiredArgsConstructor
+@Slf4j
+public class GitPlatformSyncFactory {
+
+    // Spring injecte TOUTES les implémentations de IGitPlatformSyncStrategy
+    private final List<IGitPlatformSyncStrategy> strategies;
+
+    /**
+     * Récupère la stratégie appropriée pour une plateforme.
+     * @param platform Le nom de la plateforme (ex: "GITHUB")
+     * @return La stratégie capable de gérer cette plateforme
+     */
+    public IGitPlatformSyncStrategy getStrategy(String platform) {
+        if (platform == null || platform.isBlank()) {
+            throw new UnsupportedPlatformException("La plateforme ne peut pas être null ou vide");
+        }
+
+        IGitPlatformSyncStrategy strategy = strategies.stream()
+                .filter(s -> s.supports(platform))
+                .findFirst()
+                .orElse(null);
+
+        if (strategy == null) {
+            String availablePlatforms = String.join(", ",
+                    strategies.stream()
+                            .map(IGitPlatformSyncStrategy::getPlatformName)
+                            .toList()
+            );
+
+            log.warn("❌ Plateforme non supportée: {}. Plateformes disponibles: {}", platform, availablePlatforms);
+            throw new UnsupportedPlatformException("Plateforme '" + platform + "' non supportée.");
+        }
+
+        log.info("✅ Stratégie sélectionnée pour {}: {}", platform, strategy.getClass().getSimpleName());
+        return strategy;
+    }
+
+    /**
+     * Exception custom pour une plateforme non supportée.
+     */
+    public static class UnsupportedPlatformException extends RuntimeException {
+        public UnsupportedPlatformException(String message) {
+            super(message);
+        }
+    }
+}
+
+------------------------------------------------------------
+
+// File: gitdock-sync/src/main/java/edu/ehei/gitdock/gitdocksync/strategy/IGitPlatformSyncStrategy.java
+
+package edu.ehei.gitdock.gitdocksync.strategy;
+
+import edu.ehei.gitdock.gitdocksync.dto.SyncResultDTO;
+
+/**
+ * Interface contrat pour implémenter une stratégie de synchronisation
+ * pour une plateforme Git (GitHub, GitLab, Bitbucket, etc.)
+ */
+public interface IGitPlatformSyncStrategy {
+
+    /**
+     * Détermine si cette stratégie gère la plateforme donnée.
+     * @param platform Ex: "GITHUB", "GITLAB", "BITBUCKET"
+     * @return true si cette stratégie peut gérer cette plateforme
+     */
+    boolean supports(String platform);
+
+    /**
+     * Récupère TOUTES les données du projet (branches, commits).
+     * @param repoUrl L'URL du repository (ex: https://github.com/owner/repo)
+     * @param userId L'ID de l'utilisateur GitDock qui effectue la synchro
+     * @return Un objet SyncResultDTO normalisé avec toutes les données
+     * @throws Exception Si l'aspiration échoue
+     */
+    SyncResultDTO fetchProjectData(String repoUrl, Long userId) throws Exception;
+
+    /**
+     * Extrait les parties owner/repo d'une URL.
+     * @param repoUrl Ex: "https://github.com/owner/repo.git"
+     * @return Un tableau [owner, repo]
+     */
+    String[] extractRepoInfo(String repoUrl) throws IllegalArgumentException;
+
+    /**
+     * Récupère le nom de la plateforme supportée (Utilisé pour le logging).
+     */
+    default String getPlatformName() {
+        return this.getClass().getSimpleName()
+                .replace("SyncStrategyImpl", "")
+                .toUpperCase();
+    }
+}
+
+------------------------------------------------------------
+
+// File: gitdock-sync/src/main/java/edu/ehei/gitdock/gitdocksync/strategy/impl/GithubSyncStrategyImpl.java
+
+package edu.ehei.gitdock.gitdocksync.strategy.impl;
+
+import edu.ehei.gitdock.gitdocksync.client.AuthServiceClient;
+import edu.ehei.gitdock.gitdocksync.dto.*;
+import edu.ehei.gitdock.gitdocksync.strategy.IGitPlatformSyncStrategy;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClient;
+
+import java.util.Arrays;
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+@Slf4j
+public class GithubSyncStrategyImpl implements IGitPlatformSyncStrategy {
+
+    private final AuthServiceClient authServiceClient;
+    private final RestClient restClient = RestClient.create();
+
+    // L'API par défaut (tu peux aussi la mettre dans application.yml avec @Value)
+    private final String GITHUB_API_URL = "https://api.github.com";
+
+    @Override
+    public boolean supports(String platform) {
+        return "GITHUB".equalsIgnoreCase(platform);
+    }
+
+    @Override
+    public SyncResultDTO fetchProjectData(String repoUrl, Long userId) throws Exception {
+        log.info("🔄 [GITHUB] Début de l'aspiration pour l'URL : {} (User: {})", repoUrl, userId);
+        long startTime = System.currentTimeMillis();
+
+        try {
+            // 1. Récupérer le token GitHub
+            String token = null;
+            try {
+                token = authServiceClient.getGithubToken(userId);
+            } catch (Exception e) {
+                log.warn("⚠️ Aucun token GitHub trouvé pour l'utilisateur {}. Tentative d'accès public.", userId);
+            }
+            final String finalToken = token;
+
+            // 2. Extraire owner/repo
+            String[] repoInfo = extractRepoInfo(repoUrl);
+            String owner = repoInfo[0];
+            String repo = repoInfo[1];
+
+            // 3. Aspirer les branches
+            String branchesUrl = String.format("%s/repos/%s/%s/branches?per_page=100", GITHUB_API_URL, owner, repo);
+            GithubBranchResponseDTO[] branches = restClient.get()
+                    .uri(branchesUrl)
+                    .headers(h -> {
+                        if (finalToken != null) h.setBearerAuth(finalToken);
+                        h.set("Accept", "application/vnd.github+json");
+                    })
+                    .retrieve()
+                    .body(GithubBranchResponseDTO[].class);
+
+            // 4. Aspirer la liste des commits (On limite à 30 pour éviter de surcharger l'API GitHub d'un coup)
+            String commitsUrl = String.format("%s/repos/%s/%s/commits?per_page=30", GITHUB_API_URL, owner, repo);
+            GithubCommitResponseDTO[] basicCommits = restClient.get()
+                    .uri(commitsUrl)
+                    .headers(h -> {
+                        if (finalToken != null) h.setBearerAuth(finalToken);
+                        h.set("Accept", "application/vnd.github+json");
+                    })
+                    .retrieve()
+                    .body(GithubCommitResponseDTO[].class);
+
+            // 5. 🚀 LE DEEP-FETCH : On va chercher les Stats pour chaque commit
+            List<GithubCommitResponseDTO> enrichedCommits = new java.util.ArrayList<>();
+            if (basicCommits != null) {
+                log.info("🔍 Récupération des statistiques (additions/deletions) pour {} commits...", basicCommits.length);
+                for (GithubCommitResponseDTO basicCommit : basicCommits) {
+                    try {
+                        String detailUrl = String.format("%s/repos/%s/%s/commits/%s", GITHUB_API_URL, owner, repo, basicCommit.getSha());
+                        GithubCommitResponseDTO detailedCommit = restClient.get()
+                                .uri(detailUrl)
+                                .headers(h -> {
+                                    if (finalToken != null) h.setBearerAuth(finalToken);
+                                    h.set("Accept", "application/vnd.github+json");
+                                })
+                                .retrieve()
+                                .body(GithubCommitResponseDTO.class);
+
+                        // On ajoute le commit enrichi avec ses stats !
+                        enrichedCommits.add(detailedCommit != null ? detailedCommit : basicCommit);
+                    } catch (Exception e) {
+                        log.warn("⚠️ Impossible de récupérer les stats pour le commit {} : {}", basicCommit.getSha(), e.getMessage());
+                        enrichedCommits.add(basicCommit); // On le garde même sans stats
+                    }
+                }
+            }
+
+            // Simulation d'une synchro longue (pour test)
+            // Thread.sleep(11000);
+
+            long durationSeconds = (System.currentTimeMillis() - startTime) / 1000;
+            log.info("✅ Aspiration terminée en {}s", durationSeconds);
+
+            // Construire le résultat avec les métadonnées
+            return SyncResultDTO.builder()
+                    .branches(branches != null ? Arrays.asList(branches) : List.of())
+                    .commits(enrichedCommits)
+                    .platform("GITHUB")
+                    .durationSeconds(durationSeconds)
+                    .success(true)
+                    .build();
+
+        } catch (Exception e) {
+            long durationSeconds = (System.currentTimeMillis() - startTime) / 1000;
+            log.error("❌ Erreur lors de l'aspiration GitHub: {}", e.getMessage(), e);
+
+            return SyncResultDTO.builder()
+                    .success(false)
+                    .errorMessage(e.getMessage())
+                    .platform("GITHUB")
+                    .durationSeconds(durationSeconds)
+                    .build();
+        }
+    }
+
+    @Override
+    public String[] extractRepoInfo(String repoUrl) throws IllegalArgumentException {
+        try {
+            String cleanUrl = repoUrl
+                    .replace("https://github.com/", "")
+                    .replace("http://github.com/", "")
+                    .replace(".git", "")
+                    .trim();
+
+            String[] parts = cleanUrl.split("/");
+            if (parts.length < 2) {
+                throw new IllegalArgumentException("URL GitHub invalide. Format attendu: https://github.com/owner/repo");
+            }
+            return new String[]{parts[0], parts[1]};
+        } catch (Exception e) {
+            throw new IllegalArgumentException("URL GitHub invalide: " + repoUrl, e);
+        }
+    }
+}
+
+------------------------------------------------------------
+
