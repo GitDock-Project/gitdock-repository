@@ -4,7 +4,69 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="3071480b-f974-4852-8c08-227d0d888f2f" name="Changes" comment="" />
+    <list default="true" id="3071480b-f974-4852-8c08-227d0d888f2f" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/gitdock-backend/docker-compose.yml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-task/src/Client/AuthClient.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-task/src/Client/AuthClientDecorator.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-task/src/Client/AuthClientInterface.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-task/src/Client/ProjectClient.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-task/src/Client/ProjectClientDecorator.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-task/src/Client/ProjectClientInterface.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-task/src/Enum/TaskPriority.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-task/src/Enum/TaskStatus.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-task/src/Message/Producer/TaskEventProducer.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-task/src/Message/Producer/TaskEventProducerInterface.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-task/src/Message/TaskCompletedEvent.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-task/src/Service/TaskEventProducer.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-task/src/Service/TaskMapper.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-task/tests/Client/AuthClientTest.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-task/tests/Client/ProjectClientTest.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/encodings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/encodings.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/gitdock-api.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/gitdock-api.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-auth/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-auth/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-auth/src/main/java/edu/ehei/gitdock/gitdockauth/config/AdminInitializer.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-auth/src/main/java/edu/ehei/gitdock/gitdockauth/config/AdminInitializer.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-auth/src/main/java/edu/ehei/gitdock/gitdockauth/controller/UserAccountController.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-auth/src/main/java/edu/ehei/gitdock/gitdockauth/controller/UserAccountController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-auth/src/main/java/edu/ehei/gitdock/gitdockauth/repository/UserAccountRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-auth/src/main/java/edu/ehei/gitdock/gitdockauth/repository/UserAccountRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-auth/src/main/java/edu/ehei/gitdock/gitdockauth/security/JwtFilter.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-auth/src/main/java/edu/ehei/gitdock/gitdockauth/security/JwtFilter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-auth/src/main/java/edu/ehei/gitdock/gitdockauth/security/SecurityConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-auth/src/main/java/edu/ehei/gitdock/gitdockauth/security/SecurityConfig.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-auth/src/main/java/edu/ehei/gitdock/gitdockauth/service/UserAccountServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-auth/src/main/java/edu/ehei/gitdock/gitdockauth/service/UserAccountServiceImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-auth/src/main/java/edu/ehei/gitdock/gitdockauth/service/interfaces/IUserAccountService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-auth/src/main/java/edu/ehei/gitdock/gitdockauth/service/interfaces/IUserAccountService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-auth/src/main/java/edu/ehei/gitdock/gitdockauth/strategy/GithubOAuthStrategyImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-auth/src/main/java/edu/ehei/gitdock/gitdockauth/strategy/GithubOAuthStrategyImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-auth/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-auth/src/main/resources/application.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-project/src/main/java/edu/ehei/gitdock/gitdockproject/dto/ProjectDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-project/src/main/java/edu/ehei/gitdock/gitdockproject/dto/ProjectDTO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-project/src/main/java/edu/ehei/gitdock/gitdockproject/model/Project.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-project/src/main/java/edu/ehei/gitdock/gitdockproject/model/Project.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-project/src/main/java/edu/ehei/gitdock/gitdockproject/model/UserProject.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-project/src/main/java/edu/ehei/gitdock/gitdockproject/model/UserProject.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-project/src/main/java/edu/ehei/gitdock/gitdockproject/repository/ProjectRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-project/src/main/java/edu/ehei/gitdock/gitdockproject/repository/ProjectRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-project/src/main/java/edu/ehei/gitdock/gitdockproject/repository/UserProjectRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-project/src/main/java/edu/ehei/gitdock/gitdockproject/repository/UserProjectRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-project/src/main/java/edu/ehei/gitdock/gitdockproject/security/SecurityConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-project/src/main/java/edu/ehei/gitdock/gitdockproject/security/SecurityConfig.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-project/src/main/java/edu/ehei/gitdock/gitdockproject/service/ProjectServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-project/src/main/java/edu/ehei/gitdock/gitdockproject/service/ProjectServiceImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-project/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-project/src/main/resources/application.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-task/.env" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-task/.env" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-task/backend/migrations/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-auth/Dockerfile" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-task/backend/src/Controller/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-auth/src/main/resources/application-docker.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-task/compose.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-task/compose.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-task/composer.json" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-task/composer.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-task/composer.lock" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-task/composer.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-task/config/packages/messenger.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-task/config/packages/messenger.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-task/config/packages/nelmio_cors.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-task/config/packages/nelmio_cors.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-task/config/packages/security.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-task/config/packages/security.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-task/config/services.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-task/config/services.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-task/infra/nginx/conf.d/nginx.conf" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-task/infra/nginx/conf.d/nginx.conf" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-task/phpunit.dist.xml" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-task/phpunit.dist.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-task/src/Command/RabbitConsumeCommand.php" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-task/src/Command/RabbitConsumeCommand.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-task/src/Controller/TaskController.php" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-task/src/Controller/TaskController.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-task/src/DTOs/DTOtasks/TaskDto.php" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-task/src/DTOs/DTOtasks/TaskDto.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-task/src/Entity/Epic.php" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-task/src/Entity/Epic.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-task/src/Entity/Level.php" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-task/src/Entity/Level.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-task/src/Entity/Task.php" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-task/src/Entity/Task.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-task/src/Enum/ProjectEnum.php" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-task/src/Repository/TaskRepository.php" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-task/src/Repository/TaskRepository.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-task/src/Service/EventHandler.php" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-task/src/Service/TaskService.php" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-task/src/Service/TaskService.php" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -19,6 +81,9 @@
       </list>
     </option>
   </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/backend/gitdock-backend/gitdock-task" />
+  </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 6
 }</component>
@@ -29,6 +94,7 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "Downloaded.Files.Path.Enabled": "false",
     "Maven.gitdock-auth [clean].executor": "Run",
     "Maven.gitdock-auth [install].executor": "Run",
     "Maven.gitdock-backend [clean].executor": "Run",
@@ -36,20 +102,26 @@
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "Notification.DisplayName-DoNotAsk-DatabaseConfigFileWatcher.found": "New/updated database configurations found",
     "Notification.DoNotAsk-DatabaseConfigFileWatcher.found": "true",
+    "Repository.Attach.Annotations": "false",
+    "Repository.Attach.JavaDocs": "false",
+    "Repository.Attach.Sources": "false",
     "RequestMappingsPanelOrder0": "0",
     "RequestMappingsPanelOrder1": "1",
     "RequestMappingsPanelWidth0": "75",
     "RequestMappingsPanelWidth1": "75",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "Spring Boot.GitdockAuthApplication.executor": "Run",
     "Spring Boot.GitdockDiscoveryApplication.executor": "Run",
     "Spring Boot.GitdockGatewayApplication.executor": "Run",
     "Spring Boot.GitdockProjectApplication.executor": "Run",
     "Spring Boot.GitdockSyncApplication.executor": "Run",
+    "git-widget-placeholder": "symfony-update",
     "ignore.virus.scanning.warn.message": "true",
     "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "C:/Users/dell-info/Desktop/gitdock-api/backend/gitdock-backend/gitdock-auth/src/main/resources/templates",
+    "last_opened_file_path": "C:/Users/PC/Desktop/Integration/gitdock-repository",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -59,7 +131,7 @@
     "project.structure.proportion": "0.15",
     "project.structure.side.proportion": "0.46896553",
     "run.configurations.included.in.services": "true",
-    "settings.editor.selected.configurable": "reference.projectsettings.compiler.annotationProcessors",
+    "settings.editor.selected.configurable": "preferences.pluginManager",
     "ts.external.directory.path": "C:\\Program Files\\JetBrains\\IntelliJ IDEA 2025.2.5\\plugins\\javascript-plugin\\jsLanguageServicesImpl\\external",
     "vue.rearranger.settings.migration": "true"
   },
@@ -77,6 +149,7 @@
       <recent name="C:\Users\dell-info\Desktop\gitdock-api\backend\gitdock-backend\gitdock-auth\src\main\resources\templates" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\PC\Desktop\Integration\gitdock-repository\backend\gitdock-backend" />
       <recent name="C:\Users\dell-info\Desktop\gitdock-api\backend" />
       <recent name="C:\Users\dell-info\Desktop\gitdock-api\backend\gitdock-backend" />
       <recent name="C:\Users\dell-info\Desktop\gitdock-api\frontend\gitdock-frontend\src\components\auth" />
@@ -158,8 +231,7 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-jdk-9823dce3aa75-bf35d07a577b-intellij.indexing.shared.core-IU-252.28238.7" />
-        <option value="bundled-js-predefined-d6986cc7102b-a71380e98a7c-JavaScript-IU-252.28238.7" />
+        <option value="bundled-jdk-30f59d01ecdd-2fc7cc6b9a17-intellij.indexing.shared.core-IU-253.30387.90" />
       </set>
     </attachedChunks>
   </component>
@@ -187,15 +259,5 @@
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
-  </component>
-  <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" type="javascript">
-          <url>file://$PROJECT_DIR$/frontend/gitdock-frontend/src/main.js</url>
-          <option name="timeStamp" value="1" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
   </component>
 </project>
