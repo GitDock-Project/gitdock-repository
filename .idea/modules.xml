@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/gitdock-api.iml" filepath="$PROJECT_DIR$/.idea/gitdock-api.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/gitdock-repo.iml" filepath="$PROJECT_DIR$/.idea/gitdock-repo.iml" />
     </modules>
   </component>
 </project>

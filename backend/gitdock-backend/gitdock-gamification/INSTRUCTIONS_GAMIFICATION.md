@@ -1,4 +1,4 @@
-# MISSION DE REFACTORING : GITDOCK-GAMIFICATION (.NET CORE)
+``# MISSION DE REFACTORING : GITDOCK-GAMIFICATION (.NET CORE)
 
 **CONTEXTE :** Ce service passe d'un monolithe isolé à un microservice Event-Driven. Il gère l'XP, les Niveaux et les Badges. Il ne gère PAS d'utilisateurs réels, mais maintient des profils de progression (`UserGamificationProfile`). Il réagit aux événements de `project` et `task`. Réfère-toi toujours au fichier `.cursorrules` avant de coder.
 
@@ -47,4 +47,4 @@
 1. **Créer** le DTO `NotificationEventDTO.cs`.
 2. **Créer** un dossier `Messaging/Producers/`.
 3. **Implémenter** `NotificationProducer.cs` pour publier sur `notification.routing.key`.
-4. Modifier les services métiers (ex: `BadgeService.cs` ou `LevelService.cs`) : Lorsqu'un utilisateur gagne un badge ou monte de niveau, utiliser `NotificationProducer` pour déclencher l'envoi d'une notification temps réel.
+4. Modifier les services métiers (ex: `BadgeService.cs` ou `LevelService.cs`) : Lorsqu'un utilisateur gagne un badge ou monte de niveau, utiliser `NotificationProducer` pour déclencher l'envoi d'une notification temps réel.``
