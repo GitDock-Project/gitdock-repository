@@ -1,0 +1,23 @@
+=== INFRASTRUCTURE (DOCKER) ===
+PostgreSQL (Global) : localhost:5432 (User: postgres, Pass: postgres)
+PgAdmin : http://localhost:5050 (User: admin@gitdock.com, Pass: admin)
+MySQL (Global) : localhost:3306 (User: root, Pass: root / User: task_user, Pass: task_password)
+PhpMyAdmin : http://localhost:8088
+MongoDB : localhost:27017 (User: mongodb, Pass: mongodb)
+Mongo Express : http://localhost:8085 (User: admin, Pass: pass)
+RabbitMQ (AMQP) : localhost:5672 (User: guest, Pass: guest)
+RabbitMQ (Management UI) : http://localhost:15672
+ChromaDB : http://localhost:8000
+Ollama : http://localhost:11434
+Dozzle : http://localhost:8887
+
+=== MICROSERVICES BACKEND ===
+API Gateway (Spring Cloud) : http://localhost:8080 (Point d'entree global)
+Eureka Discovery : http://localhost:8761
+GitDock Auth (Java) : http://localhost:8081 (DB: gitdock_auth sur Postgres)
+GitDock Project (Java) : http://localhost:8083 (DB: gitdock_project sur Postgres)
+GitDock Sync (Java) : http://localhost:8084 (Pas de DB relationnelle configuree explicitement)
+GitDock Notification (Java) : http://localhost:8085 (DB: gitdock_notification sur Postgres)
+GitDock Task (Symfony) : http://localhost:8000 via Nginx (DB: gitdock_tasks sur MySQL)
+GitDock Gamification (.NET) : http://localhost:5292 (DB: gitdock_gamification sur Postgres)
+GiDock YAM : http://localhost:8010/docs

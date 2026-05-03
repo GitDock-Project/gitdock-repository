@@ -1,0 +1,111 @@
+# ==========================================
+# GITDOCK MONOREPO - .CURSORIGNORE EXHAUSTIF (LAST MILE)
+# ==========================================
+
+# 1. Frontends à ignorer ABSOLUMENT (Zone Interdite)
+front_total/
+gitdock-frontend/
+gitdock-frontend-gamification/
+backend/gitdock-backend/gitdock-gamification/frontend/
+backend/gitdock-backend/gitdock-task/frontend/
+node_modules/
+dist/
+build/
+.nuxt/
+coverage/
+*.log
+npm-debug.log*
+yarn-debug.log*
+
+# 2. Versioning et Outils IDE
+.git/
+.github/
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# 3. Java / Spring Boot (Builds)
+target/
+.mvn/
+*.jar
+*.war
+*.ear
+*.class
+hs_err_pid*
+
+# 4. PHP / Symfony (Builds, Caches & Infra)
+backend/gitdock-backend/gitdock-task/vendor/
+backend/gitdock-backend/gitdock-task/var/cache/
+backend/gitdock-backend/gitdock-task/var/log/
+backend/gitdock-backend/gitdock-task/var/sessions/
+backend/gitdock-backend/gitdock-task/backend/var/
+backend/gitdock-backend/gitdock-task/public/bundles/
+backend/gitdock-backend/gitdock-task/phpunit.xml
+backend/gitdock-backend/gitdock-task/.phpunit.result.cache
+backend/gitdock-backend/gitdock-task/infra/
+
+# 5. C# / .NET Core (Builds)
+backend/gitdock-backend/gitdock-gamification/backend/backend/bin/
+backend/gitdock-backend/gitdock-gamification/backend/backend/obj/
+*.user
+*.suo
+*.userprefs
+*.sln.docstates
+TestResults/
+
+# 6. Infrastructure & Bases de données
+infrastructure/data/
+infrastructure/pgdata/
+infrastructure/mysql/
+infrastructure/rabbitmq/
+*.sql.gz
+*.dump
+
+# 7. IA / Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+
+# 8. Fichiers binaires et médias volumineux
+*.jpg
+*.png
+*.gif
+*.ico
+*.pdf
+*.mp4
+*.mp3
+
+# 9. Fichiers d'architecture obsolètes
+OLD_*.md
+EXPECTED_TREE_*.md
+
+# ==========================================
+# RÈGLE CRITIQUE : FICHIERS DE CONFIG YA_REBBI_SSALAMA
+# Ces fichiers contiennent les configs machine de tes collègues.
+# Ils sont LISIBLES (pour audit) mais JAMAIS modifiables.
+# La source de vérité pour toute config est le dossier copix/.
+# ==========================================
+ya_rebbi_ssalama/**/.env
+ya_rebbi_ssalama/**/.env.local
+ya_rebbi_ssalama/**/.env.dev
+ya_rebbi_ssalama/**/.env.prod
+ya_rebbi_ssalama/**/application.yml
+ya_rebbi_ssalama/**/application-docker.yml
+ya_rebbi_ssalama/**/application-local.yml
+ya_rebbi_ssalama/**/appsettings.json
+ya_rebbi_ssalama/**/appsettings.Development.json
+ya_rebbi_ssalama/**/appsettings.Production.json
+ya_rebbi_ssalama/**/docker-compose.yml
+ya_rebbi_ssalama/**/compose.yaml
+ya_rebbi_ssalama/**/Dockerfile
+ya_rebbi_ssalama/**/nginx.conf
+ya_rebbi_ssalama/**/infra/
+ya_rebbi_ssalama/**/secrets.toml
+ya_rebbi_ssalama/**/.streamlit/

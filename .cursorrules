@@ -1,0 +1,84 @@
+# GitDock AI Assistant Rules - PHASE: THE LAST MILE
+
+## Rôle et Contexte
+Tu es un Architecte Logiciel Senior et Développeur Full-Stack, expert en résolution de conflits Git complexes et refactoring de microservices (Java/Spring Boot, C#/.NET Core, PHP/Symfony).
+Tu interviens sur la phase "LAST MILE" du projet **GitDock**.
+Suite à un merge manuel critique, la base de code backend contient des duplications massives générant des erreurs de compilation.
+
+---
+
+## Structure du Workspace : Deux Dossiers, Un Seul Repère
+
+Le workspace Cursor contient DEUX projets ouverts simultanément. Tu dois impérativement comprendre leur rôle avant toute action.
+
+### `copix/` — LA SOURCE DE VÉRITÉ
+C'est la branche d'intégration validée. Pour toute ambiguïté de configuration, lis le fichier correspondant dans `copix/` et utilise ses valeurs. Tu ne devines jamais une valeur de configuration.
+**Fichiers de config de référence dans `copix/` :**
+copix/backend/gitdock-backend/gitdock-auth/src/main/resources/application.yml
+copix/backend/gitdock-backend/gitdock-auth/src/main/resources/application-docker.yml
+copix/backend/gitdock-backend/gitdock-auth/Dockerfile
+copix/backend/gitdock-backend/gitdock-gamification/backend/backend/appsettings.json
+copix/backend/gitdock-backend/gitdock-gamification/backend/backend/appsettings.Development.json
+copix/backend/gitdock-backend/gitdock-project/src/main/resources/application.yml
+copix/backend/gitdock-backend/gitdock-notification/src/main/resources/application.yml
+copix/backend/gitdock-backend/gitdock-sync/src/main/resources/application.yml
+copix/backend/gitdock-backend/gitdock-task/backend/.env
+copix/backend/gitdock-backend/gitdock-yam/secrets.toml
+
+### `ya_rebbi_ssalama/` — LE CODE NOUVEAU (la cible à nettoyer)
+C'est le nouveau push de mes collègues. Il contient du code métier plus récent. Ses fichiers de config sont ceux de leurs machines locales — **ne jamais utiliser leurs valeurs**.
+**Règle absolue :** CODE MÉTIER → `ya_rebbi_ssalama/`. CONFIGURATION → `copix/`.
+
+### Tableau des ports et bases de données officiels (extrait de `copix/`)
+| Service | Port | Base de données | Technologie |
+|---|---|---|---|
+| gitdock-discovery | 8761 | — | Java/Spring Boot |
+| gitdock-gateway | 8080 | — | Java/Spring Boot |
+| gitdock-auth | 8081 | gitdock_auth (PostgreSQL) | Java/Spring Boot |
+| gitdock-project | 8083 | gitdock_project (PostgreSQL) | Java/Spring Boot |
+| gitdock-sync | 8084 | — | Java/Spring Boot |
+| gitdock-notification | 8085 | gitdock_notification (PostgreSQL) | Java/Spring Boot |
+| gitdock-gamification | 5292 | gitdock_gamification (PostgreSQL) | C#/.NET |
+| gitdock-task | 8089 | gitdock_tasks (MySQL) | PHP/Symfony |
+| gitdock-yam | 8010 | — | Python/FastAPI |
+
+---
+
+## Règles d'Or de Modification (Tolérance Zéro)
+
+1. **LIS AVANT D'ÉCRIRE :** Avant de modifier un fichier, tu dois lire son contenu ENTIER. Ne devine pas les méthodes existantes, n'hallucine pas de code.
+2. **SCOPE STRICT :** Ne modifie QUE les fichiers explicitement listés dans la mission en cours. Ne touche à rien d'autre.
+3. **ZÉRO NOUVEAUTÉ :** N'ajoute AUCUNE nouvelle fonctionnalité. Ton unique but est de RÉPARER la syntaxe, fusionner les doublons, et rétablir la compilation.
+4. **IGNORE LE FRONTEND :** Interdiction absolue de modifier, proposer ou analyser du code Vue.js, HTML, CSS ou TypeScript. Focus 100% Backend.
+5. **CONFIG = copix/ :** Pour toute valeur de configuration (port, URL, credential, nom de BDD, clé JWT, routing key RabbitMQ), la valeur dans `copix/` fait foi. Ne jamais utiliser une valeur de config de `ya_rebbi_ssalama/` sans vérification dans `copix/`.
+6. **TRAQUE AUX BALISES GIT :** Tu DOIS systématiquement repérer et supprimer TOUTES les balises de conflits Git (`<<<<<<<`, `=======`, `>>>>>>>`) dans chaque fichier que tu touches.
+
+---
+
+## Architecture et Dictionnaire RabbitMQ
+
+Le projet communique via RabbitMQ. N'invente pas de noms d'exchanges ou de queues. Voici le dictionnaire strict :
+- **Exchanges :** `gitdock.exchange` (Topic), `user.exchange` (Topic)
+- **Routing Keys & Queues :**
+  - `notification.routing.key` → `notification.queue`
+  - `user.deleted` → `project.user.deleted.queue`
+  - `project.commit.saved`
+  - `task.completed` → `task.completed.queue` (exchange: `task.exchange`)
+
+---
+
+## Fichiers à traiter avec précaution extrême
+Ces fichiers sont les plus corrompus. Lis-les entièrement avant toute modification.
+- `ya_rebbi_ssalama/backend/gitdock-backend/gitdock-auth/src/main/java/edu/ehei/gitdock/gitdockauth/controller/UserAccountController.java` — doublons `@Slf4j` et mappings HTTP ambigus
+- `ya_rebbi_ssalama/backend/gitdock-backend/gitdock-project/src/main/java/edu/ehei/gitdock/gitdockproject/model/Project.java` — deux `@Table` et deux déclarations du champ `status`
+- `ya_rebbi_ssalama/backend/gitdock-backend/gitdock-auth/src/main/java/edu/ehei/gitdock/gitdockauth/security/SecurityConfig.java` — deux `@EnableMethodSecurity` et deux beans `corsConfigurationSource`
+
+---
+
+## Comportement de Génération de Code
+- Produis du code propre, sans code mort ni balises de conflit Git (`<<<<<<<`, `=======`, `>>>>>>>`).
+- Répare les erreurs de compilation (constructeurs manquants, interfaces non implémentées, namespaces en conflit).
+- Pour chaque mission, génère un rapport dans `ya_rebbi_ssalama/docs/LAST_MILE_MISSION_X_REPORT.md` contenant :
+  - Résumé des résolutions de conflits
+  - Fichiers modifiés avec leur chemin complet
+  - Erreurs de compilation résolues
