@@ -10,9 +10,9 @@
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "associatedIndex": 8
-}]]></component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 8
+}</component>
   <component name="ProjectId" id="3DDFQs1PObAbfXeqneJLqprrWFz" />
   <component name="ProjectViewState">
     <option name="showLibraryContents" value="true" />
@@ -23,7 +23,7 @@
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
     "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "C:/Users/dell-info/Desktop/Nouveau dossier/merge_task_gamification_backend",
+    "last_opened_file_path": "C:/Users/dell-info/Desktop/Nouveau dossier/ya_rebbi_ssalama",
     "settings.editor.selected.configurable": "reference.settingsdialog.IDE.editor.colors.JVM Logging"
   }
 }]]></component>
@@ -42,6 +42,7 @@
       <option name="presentableId" value="Default" />
       <updated>1777808722057</updated>
       <workItem from="1777808723188" duration="643000" />
+      <workItem from="1777810823276" duration="178000" />
     </task>
     <servers />
   </component>
