@@ -1,0 +1,3018 @@
+// File: gitdock-project/HELP.md
+
+# Getting Started
+
+### Reference Documentation
+
+For further reference, please consider the following sections:
+
+* [Official Apache Maven documentation](https://maven.apache.org/guides/index.html)
+* [Spring Boot Maven Plugin Reference Guide](https://docs.spring.io/spring-boot/4.0.3/maven-plugin)
+* [Create an OCI image](https://docs.spring.io/spring-boot/4.0.3/maven-plugin/build-image.html)
+
+### Maven Parent overrides
+
+Due to Maven's design, elements are inherited from the parent POM to the project POM.
+While most of the inheritance is fine, it also inherits unwanted elements like `<license>` and `<developers>` from the
+parent.
+To prevent this, the project POM contains empty overrides for these elements.
+If you manually switch to a different parent and actually want the inheritance, you need to remove those overrides.
+
+
+
+------------------------------------------------------------
+
+// File: gitdock-project/src/main/java/edu/ehei/gitdock/gitdockproject/client/AuthFallback.java
+
+package edu.ehei.gitdock.gitdockproject.client;
+
+import edu.ehei.gitdock.gitdockproject.dto.InviteCollaboratorRequestDTO;
+import edu.ehei.gitdock.gitdockproject.dto.UserSummaryDTO;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Component
+@Slf4j
+public class AuthFallback implements AuthServiceClient {
+
+    @Override
+    public List<UserSummaryDTO> getUsersSummaries(String token, List<Long> ids) {
+        log.warn("⚠️ [FEIGN FALLBACK] gitdock-auth injoignable. Retour de faux utilisateurs.");
+        return ids.stream().map(id -> UserSummaryDTO.builder()
+                .id(id)
+                .firstName("Service")
+                .lastName("Indisponible")
+                .email("offline@gitdock.system")
+                .isEnabled(false)
+                .build()).collect(Collectors.toList());
+    }
+
+    @Override
+    public UserSummaryDTO getUserByEmail(String token, String email) {
+        log.warn("⚠️ [FEIGN FALLBACK] Impossible de joindre gitdock-auth pour {}", email);
+        throw new RuntimeException("Service Auth indisponible");
+    }
+
+    @Override
+    public UserSummaryDTO inviteUser(String token, InviteCollaboratorRequestDTO request) {
+        throw new RuntimeException("Service Auth indisponible");
+    }
+
+    @Override
+    public List<UserSummaryDTO> getUsersByEmailsInternal(List<String> emails) {
+        return List.of();
+    }
+
+    @Override
+    public String getGithubToken(String token, Long userId) {
+        log.warn("⚠️ [FEIGN FALLBACK] Impossible de récupérer le token pour l'user {}", userId);
+        return null;
+    }
+
+}
+
+------------------------------------------------------------
+
+// File: gitdock-project/src/main/java/edu/ehei/gitdock/gitdockproject/client/AuthServiceClient.java
+
+package edu.ehei.gitdock.gitdockproject.client;
+
+import edu.ehei.gitdock.gitdockproject.dto.InviteCollaboratorRequestDTO;
+import edu.ehei.gitdock.gitdockproject.dto.UserSummaryDTO;
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+// Le "name" doit correspondre EXACTEMENT au nom enregistré dans Eureka par le service d'Auth.
+// Le "path" est le préfixe commun à toutes les routes de l'Auth.
+@FeignClient(name = "gitdock-auth", fallback = AuthFallback.class/*, path = "/api/auth/users"*/)
+public interface AuthServiceClient {
+
+    // ✅ Ajout de @RequestHeader pour forcer l'injection du JWT
+    @GetMapping("/api/auth/users/summaries")
+    List<UserSummaryDTO> getUsersSummaries(
+            @RequestHeader("Authorization") String token,
+            @RequestParam("ids") List<Long> ids
+    );
+
+    // ✅ Idem ici
+    @GetMapping("/api/auth/users/by-email")
+    UserSummaryDTO getUserByEmail(
+            @RequestHeader("Authorization") String token,
+            @RequestParam("email") String email
+    );
+
+    @PostMapping("/api/auth/users/internal/invite")
+    UserSummaryDTO inviteUser(
+            @RequestHeader("Authorization") String token,
+            @RequestBody InviteCollaboratorRequestDTO request
+    );
+
+    @PostMapping("/api/auth/users/internal/by-emails")
+    List<UserSummaryDTO> getUsersByEmailsInternal(@RequestBody List<String> emails);
+
+    @GetMapping("/api/auth/oauth/internal/token")
+    String getGithubToken(
+            @RequestHeader("Authorization") String token,
+            @RequestParam("userId") Long userId
+    );
+
+}
+
+------------------------------------------------------------
+
+// File: gitdock-project/src/main/java/edu/ehei/gitdock/gitdockproject/config/FeignClientInterceptor.java
+
+package edu.ehei.gitdock.gitdockproject.config;
+
+import feign.RequestInterceptor;
+import feign.RequestTemplate;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+
+@Configuration
+public class FeignClientInterceptor implements RequestInterceptor {
+
+    private static final String AUTHORIZATION_HEADER = "Authorization";
+
+    @Override
+    public void apply(RequestTemplate requestTemplate) {
+        // On récupère le contexte de la requête HTTP entrante (celle du Frontend)
+        ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+
+        if (attributes != null) {
+            HttpServletRequest request = attributes.getRequest();
+            String authHeader = request.getHeader(AUTHORIZATION_HEADER);
+
+            // Si la requête entrante avait un token, on le propage à la requête sortante Feign
+            if (authHeader != null) {
+                requestTemplate.header(AUTHORIZATION_HEADER, authHeader);
+            }
+        }
+    }
+}
+
+------------------------------------------------------------
+
+// File: gitdock-project/src/main/java/edu/ehei/gitdock/gitdockproject/config/RabbitMQConfig.java
+
+package edu.ehei.gitdock.gitdockproject.config; // ⚠️ À adapter pour gitdock-sync
+
+import org.springframework.amqp.core.*;
+import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
+import org.springframework.amqp.support.converter.MessageConverter;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class RabbitMQConfig {
+
+    public static final String EXCHANGE_NAME = "gitdock.exchange";
+    public static final String QUEUE_SYNC_REQUEST = "gitdock.sync.request.queue";
+    public static final String QUEUE_SYNC_RESULT = "gitdock.sync.result.queue";
+    public static final String ROUTING_KEY_REQUEST = "sync.request";
+    public static final String ROUTING_KEY_RESULT = "sync.result";
+    public static final String ROUTING_KEY_NOTIFICATION = "notification.routing.key";
+    public static final String ROUTING_KEY_WEBHOOK = "webhook.result";
+    public static final String QUEUE_WEBHOOK_RESULT = "gitdock.webhook.result.queue";
+    public static final String ROUTING_KEY_COMMIT_SAVED = "project.commit.saved";
+
+    @Bean
+    public TopicExchange gitdockExchange() {
+        return new TopicExchange(EXCHANGE_NAME);
+    }
+
+    // TopicExchance VS DirectExchange ?
+
+    @Bean
+    public Queue syncRequestQueue() {
+        return new Queue(QUEUE_SYNC_REQUEST, true); // true = durable
+    }
+
+    @Bean
+    public Queue syncResultQueue() {
+        return new Queue(QUEUE_SYNC_RESULT, true);
+    }
+
+    @Bean
+    public Binding bindingRequest(Queue syncRequestQueue, TopicExchange gitdockExchange) {
+        return BindingBuilder.bind(syncRequestQueue).to(gitdockExchange).with(ROUTING_KEY_REQUEST);
+    }
+
+    @Bean
+    public Binding bindingResult(Queue syncResultQueue, TopicExchange gitdockExchange) {
+        return BindingBuilder.bind(syncResultQueue).to(gitdockExchange).with(ROUTING_KEY_RESULT);
+    }
+
+    // Indispensable pour que RabbitMQ sérialise nos objets Java en JSON (et inversement)
+    @Bean
+    public MessageConverter jsonMessageConverter() {
+        return new Jackson2JsonMessageConverter();
+    }
+
+    @Bean
+    public Queue webhookResultQueue() {
+        return new Queue(QUEUE_WEBHOOK_RESULT, true);
+    }
+
+    @Bean
+    public Binding bindingWebhook(Queue webhookResultQueue, TopicExchange gitdockExchange) {
+        return BindingBuilder.bind(webhookResultQueue).to(gitdockExchange).with(ROUTING_KEY_WEBHOOK);
+    }
+}
+
+------------------------------------------------------------
+
+// File: gitdock-project/src/main/java/edu/ehei/gitdock/gitdockproject/controller/ProjectController.java
+
+package edu.ehei.gitdock.gitdockproject.controller;
+
+import edu.ehei.gitdock.gitdockproject.dto.*;
+import edu.ehei.gitdock.gitdockproject.service.interfaces.IProjectService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Map;
+
+@RestController
+@RequestMapping("/api/projects")
+@RequiredArgsConstructor
+public class ProjectController {
+
+    private final IProjectService projectService;
+
+    // GET http://localhost:8080/api/projects
+    @GetMapping
+    public ResponseEntity<List<ProjectDTO>> getAllProjects() {
+        return ResponseEntity.ok(projectService.getAllProjects());
+    }
+
+    // POST http://localhost:8080/api/projects
+    // POST http://localhost:8080/api/projects
+    @PostMapping
+    public ResponseEntity<?> createProject(@RequestBody CreateProjectRequestDTO request) {
+        try {
+            return ResponseEntity.ok(projectService.createProject(request));
+        } catch (RuntimeException e) {
+            // 👇 On intercepte notre mot magique pour le Frontend 👇
+            if ("OAUTH_REQUIRED".equals(e.getMessage())) {
+                // On utilise 428 (Precondition Required) ou 400 pour NE PAS déclencher
+                // la déconnexion automatique de l'intercepteur Axios !
+                return ResponseEntity.status(428).body(Map.of("message", "OAUTH_REQUIRED"));
+            }
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
+    }
+
+    // GET http://localhost:8080/api/projects/{id}
+    @GetMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN', 'ROLE_COMPANY_ADMIN', 'ROLE_WORKSPACE_OWNER', 'ROLE_MANAGER', 'ROLE_DEVELOPER')")
+    public ResponseEntity<ProjectDTO> getProject(@PathVariable Long id) {
+        return ResponseEntity.ok(projectService.getProjectById(id));
+    }
+
+    // GET http://localhost:8080/api/projects/dashboard/collaborators-grouped
+    @GetMapping("/dashboard/collaborators-grouped")
+    public ResponseEntity<List<CollaboratorGroupedDTO>> getCollaboratorsGrouped() {
+        return ResponseEntity.ok(projectService.getCollaboratorsGrouped());
+    }
+
+    // DELETE http://localhost:8080/api/projects/{projectId}/collaborators/{userId}
+    @DeleteMapping("/{projectId}/collaborators/{userId}")
+    @PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN', 'ROLE_COMPANY_ADMIN', 'ROLE_WORKSPACE_OWNER', 'ROLE_MANAGER', 'ROLE_DEVELOPER')")
+    public ResponseEntity<Void> removeCollaborator(@PathVariable Long projectId, @PathVariable Long userId) {
+        projectService.removeCollaborator(projectId, userId);
+        return ResponseEntity.ok().build();
+    }
+
+    // GET http://localhost:8080/api/projects/{projectId}/branches
+    @GetMapping("/{projectId}/branches")
+    @PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN', 'ROLE_COMPANY_ADMIN', 'ROLE_WORKSPACE_OWNER', 'ROLE_MANAGER', 'ROLE_DEVELOPER')")
+    public ResponseEntity<List<BranchDTO>> getProjectBranches(@PathVariable Long projectId) {
+        return ResponseEntity.ok(projectService.getProjectBranches(projectId));
+    }
+
+    // GET http://localhost:8080/api/projects/{projectId}/branches/{branchId}/commits
+    @GetMapping("/{projectId}/branches/{branchId}/commits")
+    @PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN', 'ROLE_COMPANY_ADMIN', 'ROLE_WORKSPACE_OWNER', 'ROLE_MANAGER', 'ROLE_DEVELOPER')")
+    public ResponseEntity<Page<CommitDTO>> getBranchCommits(@PathVariable Long projectId,
+                                                            @PathVariable Long branchId,
+                                                            @RequestParam(defaultValue = "0") int page,
+                                                            @RequestParam(defaultValue = "20") int size) {
+        return ResponseEntity.ok(projectService.getProjectCommits(projectId, branchId, page, size));
+    }
+
+    // GET /api/projects/{projectId}/collaborators
+    @GetMapping("/{projectId}/collaborators")
+    public ResponseEntity<List<CollaboratorGroupedDTO.CollaboratorDTO>> getProjectCollaborators(@PathVariable Long projectId) {
+        return ResponseEntity.ok(projectService.getProjectCollaborators(projectId));
+    }
+
+    // POST /api/projects/{projectId}/collaborators
+    @PostMapping("/{projectId}/collaborators")
+    public ResponseEntity<Void> addCollaborator(@PathVariable Long projectId, @RequestBody AddCollaboratorDTO request) {
+        projectService.addCollaborator(projectId, request);
+        return ResponseEntity.ok().build();
+    }
+
+    // DELETE http://localhost:8080/api/projects/{id}
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN', 'ROLE_COMPANY_ADMIN', 'ROLE_WORKSPACE_OWNER', 'ROLE_MANAGER')")
+    public ResponseEntity<Void> deleteProject(@PathVariable Long id) {
+        projectService.deleteProject(id);
+        return ResponseEntity.ok().build();
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<Map<String, String>> handleDuplicateProject(DataIntegrityViolationException e) {
+        return ResponseEntity.badRequest().body(Map.of(
+                "message", "Un projet avec ce nom existe déjà dans votre espace de travail."
+        ));
+    }
+}
+
+------------------------------------------------------------
+
+// File: gitdock-project/src/main/java/edu/ehei/gitdock/gitdockproject/controller/ProjectSagaController.java
+
+package edu.ehei.gitdock.gitdockproject.controller;
+
+import edu.ehei.gitdock.gitdockproject.dto.ProjectResponseDTO;
+import edu.ehei.gitdock.gitdockproject.dto.SagaProjectCreationRequestDTO;
+import edu.ehei.gitdock.gitdockproject.security.JwtService;
+import edu.ehei.gitdock.gitdockproject.service.UsesCases.ProjectSagaOrchestrator;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/projects/saga")
+@RequiredArgsConstructor
+public class ProjectSagaController {
+
+    private final ProjectSagaOrchestrator sagaOrchestrator;
+    private final JwtService jwtService;
+
+    @PostMapping("/create-with-team")
+    public ResponseEntity<ProjectResponseDTO> createProjectWithTeam(
+            @RequestBody @Valid SagaProjectCreationRequestDTO request,
+            @RequestHeader("X-User-Id") Long managerId,
+            HttpServletRequest httpRequest) { // Injecté par la Gateway
+
+        String authHeader = httpRequest.getHeader("Authorization");
+        if (authHeader == null) {
+            authHeader = httpRequest.getHeader("authorization"); // Fallback minuscule
+        }
+
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new RuntimeException("Action refusée : Token JWT manquant.");
+        }
+
+        String token = authHeader.substring(7);
+        Long companyId = jwtService.extractCompanyId(token);
+
+        if (companyId == null) {
+            throw new RuntimeException("Action refusée : Aucune entreprise associée à votre profil.");
+        }
+
+        // 2. On passe le companyId à l'Orchestrateur
+        ProjectResponseDTO response = sagaOrchestrator.executeProjectCreationSaga(request, managerId, companyId);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+}
+
+------------------------------------------------------------
+
+// File: gitdock-project/src/main/java/edu/ehei/gitdock/gitdockproject/controller/SuperAdminController.java
+
+package edu.ehei.gitdock.gitdockproject.controller;
+
+import edu.ehei.gitdock.gitdockproject.repository.CommitRepository;
+import edu.ehei.gitdock.gitdockproject.repository.ProjectRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Map;
+
+@RestController
+@RequestMapping("/api/projects/super-admin")
+@PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN')") // 🛡️
+@RequiredArgsConstructor
+public class SuperAdminController {
+
+    private final ProjectRepository projectRepository;
+    private final CommitRepository commitRepository;
+
+    @GetMapping("/kpis")
+    public ResponseEntity<Map<String, Long>> getPlatformKPIs() {
+        // Opérations ultra-rapides (COUNT SQL)
+        long totalProjects = projectRepository.count();
+        long totalCommits = commitRepository.count();
+
+        return ResponseEntity.ok(Map.of(
+                "totalProjects", totalProjects,
+                "totalCommits", totalCommits
+        ));
+    }
+}
+
+------------------------------------------------------------
+
+// File: gitdock-project/src/main/java/edu/ehei/gitdock/gitdockproject/dto/AddCollaboratorDTO.java
+
+package edu.ehei.gitdock.gitdockproject.dto;
+import lombok.Data;
+
+@Data
+public class AddCollaboratorDTO {
+    private String email;
+    private String role;
+    private String firstName;
+    private String lastName;
+}
+
+------------------------------------------------------------
+
+// File: gitdock-project/src/main/java/edu/ehei/gitdock/gitdockproject/dto/BranchDTO.java
+
+package edu.ehei.gitdock.gitdockproject.dto;
+
+import lombok.Builder;
+import lombok.Data;
+
+import java.time.LocalDateTime;
+
+@Data
+@Builder
+public class BranchDTO {
+    private Long id;
+    private String name;
+    private LocalDateTime lastUpdated;
+    // On pourra ajouter le dernier commit ici plus tard
+}
+
+
+------------------------------------------------------------
+
+// File: gitdock-project/src/main/java/edu/ehei/gitdock/gitdockproject/dto/CollaboratorGroupedDTO.java
+
+package edu.ehei.gitdock.gitdockproject.dto;
+
+import lombok.Builder;
+import lombok.Data;
+import java.util.List;
+
+@Data
+@Builder
+public class CollaboratorGroupedDTO {
+    private Long projectId;
+    private String projectName;
+    private List<CollaboratorDTO> collaborators;
+
+    @Data
+    @Builder
+    public static class CollaboratorDTO {
+        private Long id;
+        private String firstName; // Info venant de gitdock-auth
+        private String lastName;  // Info venant de gitdock-auth
+        private String email;     // Info venant de gitdock-auth
+        private String role;      // Info venant de gitdock-auth
+        private String status;    // Info venant de gitdock-auth
+    }
+}
+
+------------------------------------------------------------
+
+// File: gitdock-project/src/main/java/edu/ehei/gitdock/gitdockproject/dto/CommitDTO.java
+
+package edu.ehei.gitdock.gitdockproject.dto;
+
+import lombok.Builder;
+import lombok.Data;
+
+import java.time.LocalDateTime;
+
+@Data
+@Builder
+public class CommitDTO {
+    private Long id;
+    private String hash;
+    private String message;
+    private String authorName;
+    private LocalDateTime date;
+
+    private Integer additions;
+    private Integer deletions;
+}
+
+
+
+
+------------------------------------------------------------
+
+// File: gitdock-project/src/main/java/edu/ehei/gitdock/gitdockproject/dto/CommitSavedEventDTO.java
+
+package edu.ehei.gitdock.gitdockproject.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class CommitSavedEventDTO {
+    private Long commitId;
+    private String hash;
+    private String message;
+    private Long projectId;
+    private Long branchId;
+    private Long authorUserId; // Très important pour la Gamification (XP)
+    private Integer additions;
+    private Integer deletions;
+}
+
+------------------------------------------------------------
+
+// File: gitdock-project/src/main/java/edu/ehei/gitdock/gitdockproject/dto/CreateProjectRequestDTO.java
+
+package edu.ehei.gitdock.gitdockproject.dto;
+
+import lombok.Data;
+
+@Data
+public class CreateProjectRequestDTO {
+    private String name;
+    private String description;
+    private String url;
+    private String platform;
+    private String visibility;
+}
+
+
+------------------------------------------------------------
+
+// File: gitdock-project/src/main/java/edu/ehei/gitdock/gitdockproject/dto/GithubBranchResponseDTO.java
+
+package edu.ehei.gitdock.gitdockproject.dto;
+import lombok.Data;
+
+@Data
+public class GithubBranchResponseDTO {
+    private String name;
+    private CommitInfo commit;
+
+    @Data
+    public static class CommitInfo {
+        private String sha;
+        private String url;
+    }
+}
+
+------------------------------------------------------------
+
+// File: gitdock-project/src/main/java/edu/ehei/gitdock/gitdockproject/dto/GithubCommitResponseDTO.java
+
+package edu.ehei.gitdock.gitdockproject.dto;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Data;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+
+
+@Data
+public class GithubCommitResponseDTO {
+    private String sha;
+    private CommitDetail commit;
+
+    @JsonProperty("html_url")
+    private String htmlUrl;
+
+    private Stats stats;
+
+    @Data
+    public static class CommitDetail {
+        private Author author;
+        private String message;
+    }
+
+    @Data
+    public static class Author {
+        private String name;
+        private String email;
+
+        private OffsetDateTime date;
+    }
+
+    @Data
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class Stats {
+        private Integer additions;
+        private Integer deletions;
+        private Integer total;
+    }
+}
+
+------------------------------------------------------------
+
+// File: gitdock-project/src/main/java/edu/ehei/gitdock/gitdockproject/dto/InviteCollaboratorRequestDTO.java
+
+package edu.ehei.gitdock.gitdockproject.dto;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class InviteCollaboratorRequestDTO {
+    private String email;
+    private String firstName;
+    private String lastName;
+    private String projectName; // Pour personnaliser le mail
+    private Long companyId;     // On assigne le gars à la même compagnie que le projet !
+}
+
+------------------------------------------------------------
+
+// File: gitdock-project/src/main/java/edu/ehei/gitdock/gitdockproject/dto/NotificationEventDTO.java
+
+package edu.ehei.gitdock.gitdockproject.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.util.Map;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class NotificationEventDTO {
+    private Long targetUserId;       // ID de l'utilisateur (0L si Inconnu/Ghost)
+    private String targetEmail;      // L'email (vital pour les nouveaux invités qui n'ont pas encore de vrai compte)
+    private String type;             // ex: "USER_REGISTERED", "PROJECT_INVITATION", "BADGE_EARNED"
+
+    // Un dictionnaire fourre-tout pour passer les variables du template (Prénom, Liens, Nom du projet, etc.)
+    private Map<String, String> payload;
+}
+
+------------------------------------------------------------
+
+// File: gitdock-project/src/main/java/edu/ehei/gitdock/gitdockproject/dto/ProjectDTO.java
+
+package edu.ehei.gitdock.gitdockproject.dto;
+
+import lombok.Builder;
+import lombok.Data;
+import java.time.LocalDateTime;
+
+@Data
+@Builder
+public class ProjectDTO {
+    private Long id;
+    private String name;
+    private String description;
+    private String url;
+    private String platform;
+    private String visibility;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+
+    private ManagerDTO manager; // Ces infos proviendront de gitdock-auth
+
+    @Data
+    @Builder
+    public static class ManagerDTO {
+        private Long id;
+        private String firstName;
+        private String lastName;
+        private String email;
+    }
+}
+
+------------------------------------------------------------
+
+// File: gitdock-project/src/main/java/edu/ehei/gitdock/gitdockproject/dto/ProjectResponseDTO.java
+
+package edu.ehei.gitdock.gitdockproject.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class ProjectResponseDTO {
+    private Long id;
+    private String name;
+    private String description;
+    private String repoUrl;
+    private String status; // On renvoie le statut sous forme de texte (PENDING, ACTIVE...)
+    private Long managerId;
+}
+
+------------------------------------------------------------
+
+// File: gitdock-project/src/main/java/edu/ehei/gitdock/gitdockproject/dto/RepoInitEvent.java
+
+package edu.ehei.gitdock.gitdockproject.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class RepoInitEvent {
+    private Long projectId;
+    private String repoUrl;
+}
+
+------------------------------------------------------------
+
+// File: gitdock-project/src/main/java/edu/ehei/gitdock/gitdockproject/dto/SagaProjectCreationRequestDTO.java
+
+package edu.ehei.gitdock.gitdockproject.dto;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
+import lombok.Data;
+
+import java.util.List;
+
+@Data
+public class SagaProjectCreationRequestDTO {
+    @NotBlank
+    private String name;
+    private String description;
+    @NotBlank
+    private String repoUrl;
+
+    @NotEmpty
+    private List<Long> teamIds; // Les fameux IDs [2, 5, 8] renvoyés par GitDock-YAM
+}
+
+
+------------------------------------------------------------
+
+// File: gitdock-project/src/main/java/edu/ehei/gitdock/gitdockproject/dto/SyncRequestMessageDTO.java
+
+package edu.ehei.gitdock.gitdockproject.dto; // ⚠️ À adapter
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.Builder;
+
+import lombok.NoArgsConstructor;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+public class SyncRequestMessageDTO {
+    private Long projectId;
+    private String repoUrl;
+    private Long userId;
+    private String platform;
+    private String projectName;
+}
+
+------------------------------------------------------------
+
+// File: gitdock-project/src/main/java/edu/ehei/gitdock/gitdockproject/dto/SyncResultMessageDTO.java
+
+package edu.ehei.gitdock.gitdockproject.dto; // ⚠️ À adapter
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import java.util.List;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class SyncResultMessageDTO {
+    private Long projectId;
+    private List<GithubBranchResponseDTO> branches;
+    private List<GithubCommitResponseDTO> commits;
+    private boolean success;
+    private String errorMessage;
+    private long durationSeconds;
+    private String repoUrl;
+}
+
+------------------------------------------------------------
+
+// File: gitdock-project/src/main/java/edu/ehei/gitdock/gitdockproject/dto/UserSummaryDTO.java
+
+package edu.ehei.gitdock.gitdockproject.dto;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+/**
+ * DTO allégé pour recevoir uniquement les infos publiques d'un utilisateur
+ * depuis le microservice gitdock-auth.
+ */
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class UserSummaryDTO {
+    private Long id;
+    private String firstName;
+    private String lastName;
+    private String email;
+
+    @JsonProperty
+    private boolean isEnabled;
+}
+
+------------------------------------------------------------
+
+// File: gitdock-project/src/main/java/edu/ehei/gitdock/gitdockproject/enums/ProjectPlatform.java
+
+package edu.ehei.gitdock.gitdockproject.enums;
+
+public enum ProjectPlatform {
+    GITHUB,
+    GITLAB,
+    BITBUCKET
+}
+
+
+------------------------------------------------------------
+
+// File: gitdock-project/src/main/java/edu/ehei/gitdock/gitdockproject/enums/ProjectRole.java
+
+package edu.ehei.gitdock.gitdockproject.enums;
+
+/**
+ * Définit les rôles applicables au contexte STRICT d'un projet.
+ * (On ignore ici les rôles globaux comme SUPER_ADMIN ou COMPANY_ADMIN
+ * qui sont gérés exclusivement par gitdock-auth).
+ */
+public enum ProjectRole {
+    MANAGER,
+    DEVELOPER,
+    TESTER,
+    GUEST // Si tu en as besoin plus tard
+}
+
+------------------------------------------------------------
+
+// File: gitdock-project/src/main/java/edu/ehei/gitdock/gitdockproject/enums/ProjectStatus.java
+
+package edu.ehei.gitdock.gitdockproject.enums;
+
+public enum ProjectStatus {
+    PENDING,    // En cours de création par la Saga
+    ACTIVE,     // Création réussie, équipe assignée
+    FAILED      // La Saga a échoué (sera supprimé ou archivé)
+}
+
+
+------------------------------------------------------------
+
+// File: gitdock-project/src/main/java/edu/ehei/gitdock/gitdockproject/enums/ProjectVisibility.java
+
+package edu.ehei.gitdock.gitdockproject.enums;
+
+public enum ProjectVisibility {
+    PUBLIC,
+    PRIVATE
+}
+
+
+------------------------------------------------------------
+
+// File: gitdock-project/src/main/java/edu/ehei/gitdock/gitdockproject/exception/ResourceNotFoundException.java
+
+package edu.ehei.gitdock.gitdockproject.exception;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
+
+@ResponseStatus(HttpStatus.NOT_FOUND)
+public class ResourceNotFoundException extends RuntimeException {
+    public ResourceNotFoundException(String message) {
+        super(message);
+    }
+}
+
+------------------------------------------------------------
+
+// File: gitdock-project/src/main/java/edu/ehei/gitdock/gitdockproject/exception/SagaExecutionException.java
+
+package edu.ehei.gitdock.gitdockproject.exception;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
+
+// Cette annotation dit à Spring de renvoyer automatiquement une erreur HTTP 404
+@ResponseStatus(HttpStatus.NOT_FOUND)
+public class SagaExecutionException extends RuntimeException {
+    public SagaExecutionException(String message) {
+        super(message);
+    }
+}
+
+------------------------------------------------------------
+
+// File: gitdock-project/src/main/java/edu/ehei/gitdock/gitdockproject/GitdockProjectApplication.java
+
+package edu.ehei.gitdock.gitdockproject;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+import org.springframework.cloud.openfeign.EnableFeignClients;
+
+@SpringBootApplication
+@EnableDiscoveryClient
+@EnableFeignClients
+public class GitdockProjectApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(GitdockProjectApplication.class, args);
+    }
+
+}
+
+
+------------------------------------------------------------
+
+// File: gitdock-project/src/main/java/edu/ehei/gitdock/gitdockproject/mapper/ProjectMapper.java
+
+package edu.ehei.gitdock.gitdockproject.mapper;
+
+import edu.ehei.gitdock.gitdockproject.dto.ProjectResponseDTO;
+import edu.ehei.gitdock.gitdockproject.model.Project;
+import org.springframework.stereotype.Component;
+
+@Component
+public class ProjectMapper {
+    public static ProjectResponseDTO toResponse(Project project) {
+        if (project == null) return null;
+
+        return ProjectResponseDTO.builder()
+                .id(project.getId())
+                .name(project.getName())
+                .description(project.getDescription())
+                .repoUrl(project.getUrl()) //
+                .status(project.getStatus() != null ? project.getStatus().name() : null)
+                .managerId(project.getManagedById())
+                .build();
+    }
+}
+
+------------------------------------------------------------
+
+// File: gitdock-project/src/main/java/edu/ehei/gitdock/gitdockproject/messaging/RabbitMQProducer.java
+
+package edu.ehei.gitdock.gitdockproject.messaging;
+
+import edu.ehei.gitdock.gitdockproject.dto.NotificationEventDTO;
+import edu.ehei.gitdock.gitdockproject.dto.RepoInitEvent;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.stereotype.Service;
+
+import java.util.Map;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class RabbitMQProducer {
+
+    private final RabbitTemplate rabbitTemplate;
+
+    // Assure-toi que cet exchange correspond à ta config RabbitMQ
+    private static final String EXCHANGE = "gitdock.exchange";
+    private static final String ROUTING_KEY = "sync.repo.init";
+
+    public void sendRepoInitRequest(RepoInitEvent event) {
+        log.info("Envoi de l'événement d'initialisation de repo pour le projet {}", event.getProjectId());
+        rabbitTemplate.convertAndSend(EXCHANGE, ROUTING_KEY, event);
+    }
+
+    public void sendNotification(Long targetUserId, String title, String message) {
+        log.info("Envoi d'une notification via RabbitMQ pour l'utilisateur {}", targetUserId);
+
+        NotificationEventDTO event = NotificationEventDTO.builder()
+                .targetUserId(targetUserId)
+                .type("TYPE_PROJECT_INVITATION") // On recycle ce type qui fait apparaitre une notif standard dans ton Listener
+                .payload(Map.of(
+                        "title", title,
+                        "message", message
+                ))
+                .build();
+
+        // Remplace par tes vrais EXCHANGE et ROUTING_KEY de notification (souvent "gitdock.exchange" et "notification.routing.key")
+        rabbitTemplate.convertAndSend("gitdock.exchange", "notification.routing.key", event);
+    }
+}
+
+------------------------------------------------------------
+
+// File: gitdock-project/src/main/java/edu/ehei/gitdock/gitdockproject/messaging/UserDeletedListener.java
+
+package edu.ehei.gitdock.gitdockproject.messaging;
+
+import edu.ehei.gitdock.gitdockproject.service.interfaces.IProjectService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.annotation.Exchange;
+import org.springframework.amqp.rabbit.annotation.Queue;
+import org.springframework.amqp.rabbit.annotation.QueueBinding;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.stereotype.Component;
+
+@Component
+@RequiredArgsConstructor
+@Slf4j
+public class UserDeletedListener {
+
+    private final IProjectService projectService;
+
+    // Écoute le message venant de gitdock-auth
+    @RabbitListener(bindings = @QueueBinding(
+            value = @Queue(value = "project.user.deleted.queue", durable = "true"),
+            exchange = @Exchange(value = "user.exchange", type = "topic"),
+            key = "user.deleted"
+    ))
+    public void handleUserDeletedEvent(Long deletedUserId) {
+        log.info("📢 Événement RabbitMQ reçu : L'utilisateur ID {} a été supprimé. Application du protocole Ghost...", deletedUserId);
+        projectService.assignToGhostUser(deletedUserId);
+    }
+}
+
+------------------------------------------------------------
+
+// File: gitdock-project/src/main/java/edu/ehei/gitdock/gitdockproject/model/Branch.java
+
+package edu.ehei.gitdock.gitdockproject.model;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import lombok.*;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+@Entity
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@Table(name = "branch",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"project_id", "name"})
+)
+public class Branch {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "project_id", nullable = false)
+    @NotNull
+    @JsonIgnore
+    private Project project;
+
+    @NotBlank
+    private String name;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt;
+
+    @Builder.Default
+    @OneToMany(mappedBy = "branch", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private List<Commit> commits = new ArrayList<>();
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
+}
+
+------------------------------------------------------------
+
+// File: gitdock-project/src/main/java/edu/ehei/gitdock/gitdockproject/model/Commit.java
+
+package edu.ehei.gitdock.gitdockproject.model;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import lombok.*;
+
+import java.time.LocalDateTime;
+
+@Entity
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@Table(name = "commits", uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"project_id", "hash"})
+})
+public class Commit {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    // Lien logique vers gitdock-auth (UserAccount)
+    @Column(name = "user_id")
+    private Long userId;
+
+    String authorName;
+    String authorEmail;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "project_id", nullable = false)
+    @NotNull
+    @JsonIgnore
+    private Project project;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "branch_id")
+    @JsonIgnore
+    private Branch branch;
+
+    // Lien logique vers gitdock-tasks (Task)
+    @Column(name = "task_id")
+    private Long taskId;
+
+    @Column(length = 40, nullable = false)
+    private String hash;
+
+    @Column(name = "committed_at", nullable = false)
+    private LocalDateTime committedAt;
+
+    @Column(columnDefinition = "TEXT")
+    private String message;
+
+    @Column(name = "additions")
+    @Builder.Default
+    private Integer additions = 0;
+
+    @Column(name = "deletions")
+    @Builder.Default
+    private Integer deletions = 0;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt;
+
+    // La relation CommitTag est gérée dans gitdock-gamification
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+        if (this.committedAt == null) {
+            this.committedAt = LocalDateTime.now();
+        }
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
+}
+
+------------------------------------------------------------
+
+// File: gitdock-project/src/main/java/edu/ehei/gitdock/gitdockproject/model/Part.java
+
+package edu.ehei.gitdock.gitdockproject.model;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import lombok.*;
+
+import java.time.LocalDateTime;
+
+@Entity
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@Table(name = "part", uniqueConstraints = @UniqueConstraint(columnNames = {"project_id", "name"}))
+public class Part {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(columnDefinition = "TEXT")
+    private String description;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "project_id", nullable = false)
+    @JsonIgnore
+    private Project project;
+
+    @NotBlank
+    private String name;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt;
+
+    // Tasks, Tags, Levels, Badges sont gérés dans d'autres microservices
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
+}
+
+------------------------------------------------------------
+
+// File: gitdock-project/src/main/java/edu/ehei/gitdock/gitdockproject/model/Project.java
+
+package edu.ehei.gitdock.gitdockproject.model;
+
+import edu.ehei.gitdock.gitdockproject.enums.ProjectPlatform;
+import edu.ehei.gitdock.gitdockproject.enums.ProjectStatus;
+import edu.ehei.gitdock.gitdockproject.enums.ProjectVisibility;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import lombok.*;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+@Entity
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@Table(name = "project", uniqueConstraints = @UniqueConstraint(columnNames = {"company_id", "name"}))
+public class Project {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    // Lien "logique" vers gitdock-auth (Company)
+    @Column(name = "company_id", nullable = false)
+    private Long companyId;
+
+    @NotBlank
+    private String name;
+
+    @Column(columnDefinition = "TEXT")
+    private String description;
+
+    // Lien "logique" vers gitdock-auth (UserAccount)
+    @Column(name = "managed_by_id")
+    private Long managedById;
+
+    @Column(name = "repo_id", unique = true)
+    private String repoId;
+
+    @NotBlank
+    private String url;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "platform", nullable = false)
+    private ProjectPlatform platform;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ProjectVisibility visibility;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status")
+    private ProjectStatus status; // Le statut essentiel pour la Saga
+
+    // --- RELATIONS CONSERVÉES DANS GITDOCK-PROJECT ---
+
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<Part> parts = new ArrayList<>();
+
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<Branch> branches = new ArrayList<>();
+
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL)
+    @Builder.Default
+    private List<Commit> commits = new ArrayList<>();
+
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<UserProject> userProjects = new ArrayList<>();
+
+    // --------------------------------------------------
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    // Note : J'ai retiré le @PreRemove qui faisait commit.setTask(null)
+    // car la logique Task (PHP/Symfony) n'est plus ici.
+    // Si un commit fait référence à une tâche, il aura simplement un champ "taskId (Long)".
+}
+
+------------------------------------------------------------
+
+// File: gitdock-project/src/main/java/edu/ehei/gitdock/gitdockproject/model/UserProject.java
+
+package edu.ehei.gitdock.gitdockproject.model;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.*;
+import lombok.*;
+
+import java.time.LocalDateTime;
+import edu.ehei.gitdock.gitdockproject.enums.ProjectRole;
+
+@Entity
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@Table(name = "user_project", uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"user_id", "project_id"})
+})
+public class UserProject {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    // Lien logique vers gitdock-auth (UserAccount)
+    @Column(name = "user_id", nullable = false)
+    private Long userId;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "project_id", nullable = false)
+    private Project project;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role_name", nullable = false)
+    private ProjectRole role;
+
+    // Lien logique vers gitdock-auth (UserAccount)
+    @Column(name = "assigned_by_id")
+    private Long assignedById;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime assignedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        this.assignedAt = LocalDateTime.now();
+    }
+}
+
+------------------------------------------------------------
+
+// File: gitdock-project/src/main/java/edu/ehei/gitdock/gitdockproject/repository/BranchRepository.java
+
+package edu.ehei.gitdock.gitdockproject.repository;
+
+import edu.ehei.gitdock.gitdockproject.model.Branch;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+import java.util.List;
+
+@Repository
+public interface BranchRepository extends JpaRepository<Branch, Long> {
+    boolean existsByProjectIdAndName(Long projectId, String name);
+    List<Branch> findByProjectId(Long projectId);
+}
+
+------------------------------------------------------------
+
+// File: gitdock-project/src/main/java/edu/ehei/gitdock/gitdockproject/repository/CommitRepository.java
+
+package edu.ehei.gitdock.gitdockproject.repository;
+
+import edu.ehei.gitdock.gitdockproject.model.Commit;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+
+@Repository
+public interface CommitRepository extends JpaRepository<Commit, Long> {
+
+    @Modifying
+    @Query("UPDATE Commit c SET c.userId = :ghostId WHERE c.userId = :userId")
+    void reassignCommitsToGhost(@Param("userId") Long userId, @Param("ghostId") Long ghostId);
+
+    boolean existsByHashAndProjectId(String hash, Long projectId);
+
+    Page<Commit> findByProjectIdOrderByCommittedAtDesc(Long projectId, Pageable pageable);
+
+    Page<Commit> findByBranchIdOrderByCommittedAtDesc(Long branchId, Pageable pageable);
+}
+
+------------------------------------------------------------
+
+// File: gitdock-project/src/main/java/edu/ehei/gitdock/gitdockproject/repository/ProjectRepository.java
+
+package edu.ehei.gitdock.gitdockproject.repository;
+
+import edu.ehei.gitdock.gitdockproject.model.Project;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+
+@Repository
+public interface ProjectRepository extends JpaRepository<Project, Long> {
+
+    List<Project> findByCompanyId(Long companyId);
+
+    // On utilise directement l'attribut userId défini dans UserProject
+    @Query("SELECT DISTINCT p FROM Project p JOIN p.userProjects up WHERE up.userId = :userId")
+    List<Project> findAssignedProjects(@Param("userId") Long userId);
+
+    // Remplacement de findByManagedBy(UserAccount user)
+    List<Project> findByManagedById(Long managedById);
+
+    List<Project> findByUrlContainingIgnoreCase(String urlPart);
+}
+
+------------------------------------------------------------
+
+// File: gitdock-project/src/main/java/edu/ehei/gitdock/gitdockproject/repository/UserProjectRepository.java
+
+package edu.ehei.gitdock.gitdockproject.repository;
+
+import edu.ehei.gitdock.gitdockproject.enums.ProjectRole;
+import edu.ehei.gitdock.gitdockproject.model.Project;
+import edu.ehei.gitdock.gitdockproject.model.UserProject;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface UserProjectRepository extends JpaRepository<UserProject, Long> {
+
+    boolean existsByUserIdAndProject(Long userId, Project project);
+
+    @Modifying
+    @Query("DELETE FROM UserProject up WHERE up.userId = :userId")
+    void deleteByUserId(@Param("userId") Long userId);
+
+    @Modifying
+    @Query("DELETE FROM UserProject up WHERE up.project.id = :projectId AND up.userId = :userId")
+    void removeUserFromProject(@Param("projectId") Long projectId, @Param("userId") Long userId);
+
+    // On utilise roleId au lieu de RoleName, car le nom du rôle est dans gitdock-auth !
+    boolean existsByProjectIdAndUserIdAndRole(Long projectId, Long userId, ProjectRole role);
+
+
+}
+
+------------------------------------------------------------
+
+// File: gitdock-project/src/main/java/edu/ehei/gitdock/gitdockproject/security/JwtFilter.java
+
+package edu.ehei.gitdock.gitdockproject.security;
+
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.lang.NonNull;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Component
+@RequiredArgsConstructor
+@Slf4j
+public class JwtFilter extends OncePerRequestFilter {
+
+    private final JwtService jwtService;
+
+    @Override
+    protected void doFilterInternal(
+            @NonNull HttpServletRequest request,
+            @NonNull HttpServletResponse response,
+            @NonNull FilterChain filterChain
+    ) throws ServletException, IOException {
+
+        final String authHeader = request.getHeader("Authorization");
+
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        try {
+            String jwt = authHeader.substring(7);
+
+            if (jwt.trim().isEmpty() || "null".equals(jwt) || "undefined".equals(jwt)) {
+                filterChain.doFilter(request, response);
+                return;
+            }
+
+            String userEmail = jwtService.extractEmail(jwt);
+
+            // Validation STATLESS : Pas d'appel à la base de données !
+            if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                if (jwtService.isTokenValid(jwt)) {
+
+                    // On récupère les rôles directement depuis le JWT
+                    List<String> roles = jwtService.extractRoles(jwt);
+                    var authorities = roles.stream()
+                            .map(SimpleGrantedAuthority::new)
+                            .collect(Collectors.toList());
+
+                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                            userEmail, // Principal (Email)
+                            null,
+                            authorities // Rôles injectés
+                    );
+
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                }
+            }
+        } catch (Exception e) {
+            log.error("Erreur validation JWT dans gitdock-project: {}", e.getMessage());
+        }
+
+        filterChain.doFilter(request, response);
+    }
+}
+
+------------------------------------------------------------
+
+// File: gitdock-project/src/main/java/edu/ehei/gitdock/gitdockproject/security/JwtService.java
+
+package edu.ehei.gitdock.gitdockproject.security;
+
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+import javax.crypto.SecretKey;
+import java.util.Date;
+import java.util.List;
+import java.util.function.Function;
+
+@Service
+public class JwtService {
+
+    @Value("${application.security.jwt.secret}")
+    private String jwtSecret;
+
+    public String extractEmail(String token) {
+        return extractClaim(token, Claims::getSubject);
+    }
+
+    public Long extractUserId(String token) {
+        return extractClaim(token, claims -> claims.get("userId", Long.class));
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<String> extractRoles(String token) {
+        return extractClaim(token, claims -> claims.get("authorities", List.class));
+    }
+
+    public boolean isTokenValid(String token) {
+        return !isTokenExpired(token);
+    }
+
+    private boolean isTokenExpired(String token) {
+        return extractClaim(token, Claims::getExpiration).before(new Date());
+    }
+
+    private <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
+        final Claims claims = extractAllClaims(token);
+        return claimsResolver.apply(claims);
+    }
+
+    private Claims extractAllClaims(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(getSignKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+    }
+
+    private SecretKey getSignKey() {
+        byte[] keyBytes = Decoders.BASE64.decode(jwtSecret);
+        return Keys.hmacShaKeyFor(keyBytes);
+    }
+
+    public Long extractCompanyId(String token) {
+        return extractClaim(token, claims -> {
+            Number companyId = claims.get("companyId", Number.class);
+            return companyId != null ? companyId.longValue() : null;
+        });
+    }
+
+    public String extractSubscriptionPlan(String token) {
+        // On récupère la valeur exacte qu'on a insérée dans l'Auth
+        return extractClaim(token, claims -> claims.get("company_plan", String.class));
+    }
+}
+
+------------------------------------------------------------
+
+// File: gitdock-project/src/main/java/edu/ehei/gitdock/gitdockproject/security/SecurityConfig.java
+
+package edu.ehei.gitdock.gitdockproject.security;
+
+import jakarta.servlet.DispatcherType;
+import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.servlet.util.matcher.MvcRequestMatcher;
+import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
+
+@Configuration
+@EnableWebSecurity
+@EnableMethodSecurity(prePostEnabled = true, securedEnabled = true)
+@RequiredArgsConstructor
+public class SecurityConfig {
+
+    private final JwtFilter jwtAuthFilter;
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity, HandlerMappingIntrospector introspector) throws Exception {
+        MvcRequestMatcher.Builder mvc = new MvcRequestMatcher.Builder(introspector);
+
+        httpSecurity
+                .csrf(AbstractHttpConfigurer::disable)
+                // Note: Le CORS est généralement géré par l'API Gateway en architecture microservices
+                .authorizeHttpRequests(req -> req
+                        .dispatcherTypeMatchers(DispatcherType.FORWARD, DispatcherType.ERROR).permitAll()
+                        // On bloque tout, il faut un token valide pour accéder aux projets
+                        .anyRequest().authenticated()
+                )
+                .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+
+        return httpSecurity.build();
+    }
+}
+
+------------------------------------------------------------
+
+// File: gitdock-project/src/main/java/edu/ehei/gitdock/gitdockproject/service/interfaces/IProjectService.java
+
+package edu.ehei.gitdock.gitdockproject.service.interfaces;
+
+import edu.ehei.gitdock.gitdockproject.dto.*;
+import org.springframework.data.domain.Page;
+
+import java.util.List;
+
+/**
+ * Interface définissant les services de gestion de projet.
+ */
+public interface IProjectService {
+
+    /**
+     * Crée un nouveau projet et assigne le créateur comme manager.
+     */
+    ProjectDTO createProject(CreateProjectRequestDTO requestDto);
+
+    /**
+     * Récupère tous les projets auxquels l'utilisateur courant a accès.
+     */
+    List<ProjectDTO> getAllProjects();
+
+    /**
+     * Récupère la liste des collaborateurs groupés par projet.
+     */
+    List<CollaboratorGroupedDTO> getCollaboratorsGrouped();
+
+    /**
+     * Retire un collaborateur d'un projet spécifique.
+     */
+    void removeCollaborator(Long projectId, Long collaboratorId);
+
+    /**
+     * Récupère les détails d'un projet par son identifiant.
+     */
+    ProjectDTO getProjectById(Long id);
+
+    /**
+     * Liste toutes les branches enregistrées pour un projet.
+     */
+    List<BranchDTO> getProjectBranches(Long projectId);
+
+    /**
+     * Liste les commits d'un projet (optionnellement filtrés par branche).
+     */
+    Page<CommitDTO> getProjectCommits(Long projectId, Long branchId, int page, int size);
+
+    List<CollaboratorGroupedDTO.CollaboratorDTO> getProjectCollaborators(Long projectId);
+
+    void addCollaborator(Long projectId, AddCollaboratorDTO request);
+
+    void deleteProject(Long id);
+
+    void assignToGhostUser(Long deletedUserId);
+
+}
+
+------------------------------------------------------------
+
+// File: gitdock-project/src/main/java/edu/ehei/gitdock/gitdockproject/service/ProjectServiceImpl.java
+
+package edu.ehei.gitdock.gitdockproject.service;
+
+import edu.ehei.gitdock.gitdockproject.client.AuthServiceClient;
+import edu.ehei.gitdock.gitdockproject.config.RabbitMQConfig;
+import edu.ehei.gitdock.gitdockproject.dto.*;
+import edu.ehei.gitdock.gitdockproject.enums.ProjectPlatform;
+import edu.ehei.gitdock.gitdockproject.enums.ProjectRole;
+import edu.ehei.gitdock.gitdockproject.enums.ProjectVisibility;
+import edu.ehei.gitdock.gitdockproject.model.*;
+import edu.ehei.gitdock.gitdockproject.repository.*;
+import edu.ehei.gitdock.gitdockproject.security.JwtService;
+import edu.ehei.gitdock.gitdockproject.service.interfaces.IProjectService;
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import feign.FeignException;
+import edu.ehei.gitdock.gitdockproject.dto.InviteCollaboratorRequestDTO;
+
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+
+@Service
+@RequiredArgsConstructor
+@Slf4j
+public class ProjectServiceImpl implements IProjectService {
+
+    private final ProjectRepository projectRepository;
+    private final UserProjectRepository userProjectRepository;
+    private final BranchRepository branchRepository;
+    private final CommitRepository commitRepository;
+
+    private final RabbitTemplate rabbitTemplate;
+
+    // Nouveau : Le client Feign pour communiquer avec l'Auth
+    private final AuthServiceClient authServiceClient;
+
+    // Nouveau : Pour récupérer le token de la requête courante (pour obtenir le
+    // companyId)
+    private final HttpServletRequest request;
+    private final JwtService jwtService;
+
+    /*
+    // On s'injecte nous-mêmes (via le proxy)
+    @Autowired
+    @Lazy
+    private ProjectServiceImpl self;
+     */
+
+    @Transactional
+    public ProjectDTO createProject(CreateProjectRequestDTO requestDto) {
+
+        // 1. Extraction des informations de l'utilisateur depuis le JWT
+        Long currentUserId = getCurrentUserId();
+        Long companyId = getCurrentCompanyId(); // On suppose qu'il est dans le token, à ajouter si ce n'est pas le cas
+
+        if (companyId == null) {
+            throw new RuntimeException(
+                    "Impossible de créer un projet : L'utilisateur n'est rattaché à aucune entreprise.");
+        }
+
+        boolean isPrivate = ProjectVisibility.valueOf(requestDto.getVisibility().toUpperCase()) == ProjectVisibility.PRIVATE;
+        boolean isGithub = ProjectPlatform.valueOf(requestDto.getPlatform().toUpperCase()) == ProjectPlatform.GITHUB;
+
+        if (isPrivate && isGithub) {
+            try {
+                // On vérifie la présence du token GitHub via Feign
+                String token = authServiceClient.getGithubToken("Bearer " + getRawJwt(), currentUserId);
+                if (token == null || token.isBlank()) {
+                    throw new RuntimeException("OAUTH_REQUIRED");
+                }
+            } catch (Exception e) {
+                // Pas de token ou erreur de communication → on bloque la création
+                log.warn("Tentative d'ajout de projet privé sans token GitHub pour user {}", currentUserId);
+                throw new RuntimeException("OAUTH_REQUIRED");
+            }
+        }
+
+        /*
+         * ProjectVisibility visibility =
+         * ProjectVisibility.valueOf(requestDto.getVisibility().toUpperCase());
+         * 
+         * // 👇 1. ON RÉCUPÈRE LE PLAN DEPUIS LE JWT
+         * String currentPlan = getCurrentSubscriptionPlan();
+         * 
+         * // 👇 2. LA RÈGLE MÉTIER SAAS EST DE RETOUR ! 🛡️
+         * if (visibility == ProjectVisibility.PRIVATE) {
+         * if ("FREE".equalsIgnoreCase(currentPlan)) {
+         * // Utilise une RuntimeException ou une exception métier personnalisée
+         * throw new
+         * RuntimeException("Votre plan actuel (Gratuit) ne permet pas de créer des projets privés. Passez au plan PRO."
+         * );
+         * }
+         * }
+         */
+        // 2. Création du projet
+        Project project = Project.builder()
+                .name(requestDto.getName())
+                .description(requestDto.getDescription())
+                .url(requestDto.getUrl())
+                .platform(ProjectPlatform.valueOf(requestDto.getPlatform().toUpperCase()))
+                .visibility(ProjectVisibility.valueOf(requestDto.getVisibility().toUpperCase()))
+                .companyId(companyId) // Utilisation de l'ID
+                .managedById(currentUserId) // Utilisation de l'ID
+                .build();
+
+        Project savedProject = projectRepository.save(project);
+
+        UserProject userProject = UserProject.builder()
+                .userId(currentUserId)
+                .project(savedProject)
+                .role(ProjectRole.MANAGER)
+                .assignedAt(LocalDateTime.now())
+                .assignedById(currentUserId)
+                .build();
+
+        userProjectRepository.save(userProject);
+
+        // 4. SYNCHRONISATION EXTERNE (ASYNCHRONE VIA RABBITMQ)
+        log.info("Envoi de la requête de synchronisation à RabbitMQ pour le projet {}", savedProject.getName());
+
+        SyncRequestMessageDTO message = SyncRequestMessageDTO.builder()
+                .projectId(savedProject.getId())
+                .repoUrl(savedProject.getUrl())
+                .userId(currentUserId)
+                .platform(savedProject.getPlatform().name()) // "GITHUB", "GITLAB", etc.
+                .projectName(savedProject.getName())         // Le vrai nom !
+                .build();
+
+        // On poste le message dans l'échange et on rend la main immédiatement
+        rabbitTemplate.convertAndSend(
+                RabbitMQConfig.EXCHANGE_NAME,
+                RabbitMQConfig.ROUTING_KEY_REQUEST,
+                message
+        );
+
+        return mapToProjectDto(savedProject);
+
+    }
+
+    public List<ProjectDTO> getAllProjects() {
+        Set<Project> accessibleProjects = fetchAccessibleProjects();
+
+        // On récupère tous les IDs des managers uniques
+        List<Long> managerIds = accessibleProjects.stream()
+                .map(Project::getManagedById)
+                .filter(Objects::nonNull)
+                .distinct()
+                .collect(Collectors.toList());
+
+        // BATCH FETCHING : On interroge l'Auth Service une seule fois !
+        Map<Long, UserSummaryDTO> managerMap = getManagersData(managerIds);
+
+        return accessibleProjects.stream()
+                .map(p -> mapToProjectDtoWithManagerData(p, managerMap.get(p.getManagedById())))
+                .sorted((p1, p2) -> p2.getCreatedAt().compareTo(p1.getCreatedAt()))
+                .collect(Collectors.toList());
+    }
+
+    public List<CollaboratorGroupedDTO> getCollaboratorsGrouped() {
+        Set<Project> visibleProjects = fetchAccessibleProjects();
+
+        // Extraire tous les userIds de tous les projets
+        Set<Long> userIdsToFetch = new HashSet<>();
+        for (Project p : visibleProjects) {
+            for (UserProject up : p.getUserProjects()) {
+                userIdsToFetch.add(up.getUserId());
+            }
+        }
+
+        // BATCH FETCHING des collaborateurs
+        Map<Long, UserSummaryDTO> usersMap = getManagersData(new ArrayList<>(userIdsToFetch));
+
+        List<CollaboratorGroupedDTO> grouped = new ArrayList<>();
+
+        for (Project p : visibleProjects) {
+            List<CollaboratorGroupedDTO.CollaboratorDTO> collaboratorDTOS = p.getUserProjects().stream()
+                    .map(userProject -> {
+                        UserSummaryDTO userInfo = usersMap.get(userProject.getUserId());
+
+                        // Vraie vérification du statut
+                        String status = "disabled";
+                        if (userInfo != null) {
+                            status = userInfo.isEnabled() ? "active" : "pending";
+                        }
+
+                        return CollaboratorGroupedDTO.CollaboratorDTO.builder()
+                                .id(userProject.getUserId())
+                                .firstName(userInfo != null ? userInfo.getFirstName() : "Inconnu")
+                                .lastName(userInfo != null ? userInfo.getLastName() : "Inconnu")
+                                .email(userInfo != null ? userInfo.getEmail() : "inconnu@gitdock.com")
+                                .role(userProject.getRole().name())
+                                .status(status)
+                                .build();
+                    })
+                    .collect(Collectors.toList());
+
+            grouped.add(CollaboratorGroupedDTO.builder()
+                    .projectId(p.getId())
+                    .projectName(p.getName())
+                    .collaborators(collaboratorDTOS)
+                    .build());
+        }
+        return grouped;
+    }
+
+    @Transactional
+    public void removeCollaborator(Long projectId, Long collaboratorId) {
+        Long currentUserId = getCurrentUserId();
+        boolean isSuperAdmin = isCurrentUserSuperAdmin();
+
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new RuntimeException("Projet introuvable"));
+
+        boolean isProjectManager = project.getManagedById() != null && project.getManagedById().equals(currentUserId);
+
+        // Note: isWorkspaceOwner nécessite le companyId du current user (via JWT)
+        boolean isWorkspaceOwner = project.getCompanyId().equals(getCurrentCompanyId());
+
+        if (!isSuperAdmin && !isProjectManager && !isWorkspaceOwner) {
+            throw new RuntimeException("Accès refusé : Vous n'avez pas le droit de retirer des membres de ce projet.");
+        }
+
+        if (currentUserId.equals(collaboratorId)) {
+            throw new RuntimeException("Vous ne pouvez pas vous retirer vous-même du projet via cette action.");
+        }
+
+        userProjectRepository.removeUserFromProject(projectId, collaboratorId);
+    }
+
+    public ProjectDTO getProjectById(Long id) {
+        Project project = projectRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Projet introuvable"));
+
+        verifyProjectAccess(project);
+        // On récupère les infos du manager s'il y en a un
+        UserSummaryDTO managerInfo = null;
+        if (project.getManagedById() != null) {
+            Map<Long, UserSummaryDTO> managerMap = getManagersData(List.of(project.getManagedById()));
+            managerInfo = managerMap.get(project.getManagedById());
+        }
+
+        return mapToProjectDtoWithManagerData(project, managerInfo);
+    }
+
+    public List<BranchDTO> getProjectBranches(Long projectId) {
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new RuntimeException("Projet introuvable"));
+
+        verifyProjectAccess(project);
+
+        return branchRepository.findByProjectId(projectId).stream()
+                .map(branch -> BranchDTO.builder()
+                        .id(branch.getId())
+                        .name(branch.getName())
+                        .lastUpdated(branch.getUpdatedAt())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    public Page<CommitDTO> getProjectCommits(Long projectId, Long branchId, int page, int size) {
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new RuntimeException("Projet introuvable"));
+
+        verifyProjectAccess(project);
+
+        Pageable pageable = PageRequest.of(page, size);
+
+        //Page<Commit> commitPage = commitRepository.findByBranchIdOrderByCommittedAtDesc(branchId, pageable);
+
+        Page<Commit> commitPage = commitRepository.findByProjectIdOrderByCommittedAtDesc(projectId, pageable);
+
+        log.info("Nombre de commits trouvés pour branchId {} : {}", branchId, commitPage.getTotalElements());
+
+        return commitPage.map(commit -> CommitDTO.builder()
+                .id(commit.getId())
+                .hash(commit.getHash())
+                .message(commit.getMessage())
+                .authorName(commit.getAuthorName())
+                .date(commit.getCommittedAt())
+                .additions(commit.getAdditions())
+                .deletions(commit.getDeletions())
+                .build());
+    }
+
+    // --- Méthodes privées d'aide ---
+
+    private Set<Project> fetchAccessibleProjects() {
+        Long currentUserId = getCurrentUserId();
+        Long companyId = getCurrentCompanyId();
+        boolean isSuperAdmin = isCurrentUserSuperAdmin();
+        boolean canViewAllInMyCompany = isCurrentUserWorkspaceOwner() || isCurrentUserCompanyAdmin();
+
+        Set<Project> accessibleProjects = new HashSet<>();
+
+        if (isSuperAdmin) {
+            accessibleProjects.addAll(projectRepository.findAll());
+            return accessibleProjects;
+        }
+
+        accessibleProjects.addAll(projectRepository.findAssignedProjects(currentUserId));
+
+        if (canViewAllInMyCompany && companyId != null) {
+            accessibleProjects.addAll(projectRepository.findByCompanyId(companyId));
+        }
+
+        return accessibleProjects;
+    }
+
+    private ProjectDTO mapToProjectDto(Project project) {
+        return mapToProjectDtoWithManagerData(project, null);
+    }
+
+    private ProjectDTO mapToProjectDtoWithManagerData(Project project, UserSummaryDTO managerData) {
+        ProjectDTO.ManagerDTO managerDTO = null;
+
+        if (managerData != null) {
+            managerDTO = ProjectDTO.ManagerDTO.builder()
+                    .id(managerData.getId())
+                    .firstName(managerData.getFirstName())
+                    .lastName(managerData.getLastName())
+                    .email(managerData.getEmail())
+                    .build();
+        }
+
+        return ProjectDTO.builder()
+                .id(project.getId())
+                .name(project.getName())
+                .description(project.getDescription())
+                .url(project.getUrl())
+                .platform(project.getPlatform().name().toLowerCase())
+                .visibility(project.getVisibility().name())
+                .createdAt(project.getCreatedAt())
+                .updatedAt(project.getUpdatedAt())
+                .manager(managerDTO)
+                .build();
+    }
+
+    // --- BATCH FETCHING avec Feign et Résilience ---
+
+    @CircuitBreaker(name = "authService", fallbackMethod = "fallbackGetManagersData")
+    public Map<Long, UserSummaryDTO> getManagersData(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return new HashMap<>();
+        }
+        // Plus de try/catch manuel ! S'il y a une erreur ou un timeout,
+        // Resilience4j l'attrape et bascule sur la méthode fallback.
+        String bearerToken = "Bearer " + getRawJwt();
+        List<UserSummaryDTO> users = authServiceClient.getUsersSummaries(bearerToken, ids);
+        return users.stream().collect(Collectors.toMap(UserSummaryDTO::getId, u -> u));
+    }
+
+    // 👇 LA MÉTHODE DE SECOURS (Fallback) 👇
+    // La signature doit être EXACTEMENT la même que getManagersData, plus un paramètre Throwable
+    public Map<Long, UserSummaryDTO> fallbackGetManagersData(List<Long> ids, Throwable t) {
+        log.warn("⚠️ Disjoncteur ouvert (ou erreur Feign) : Impossible de joindre gitdock-auth. Raison : {}", t.getMessage());
+
+        Map<Long, UserSummaryDTO> fallbackMap = new HashMap<>();
+
+        // On crée un faux utilisateur générique pour que le Frontend affiche "Service Indisponible"
+        // au lieu de juste "Inconnu" ou de planter.
+        for (Long id : ids) {
+            fallbackMap.put(id, UserSummaryDTO.builder()
+                    .id(id)
+                    .firstName("Service")
+                    .lastName("Indisponible")
+                    .email("offline@gitdock.system")
+                    .isEnabled(false)
+                    .build());
+        }
+
+        return fallbackMap;
+    }
+
+    @Override
+    @Transactional
+    public void addCollaborator(Long projectId, AddCollaboratorDTO request) {
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new RuntimeException("Projet introuvable"));
+
+        String bearerToken = "Bearer " + getRawJwt();
+        UserSummaryDTO user = null;
+
+        try {
+            // 1. On essaie de trouver le gars
+            user = authServiceClient.getUserByEmail(bearerToken, request.getEmail());
+
+            if (user == null) {
+                throw new RuntimeException("User not found");
+            }
+        } catch (RuntimeException e) {
+            // 2. Il n'existe pas ! On l'invite et on récupère son compte pré-créé !
+            if (e instanceof FeignException.NotFound || "User not found".equals(e.getMessage())) {
+                log.info("L'utilisateur {} n'existe pas. Création du compte invité...", request.getEmail());
+                user = inviteNewUser(request, project, bearerToken);
+            } else {
+                throw e; // On relance si c'est une autre erreur métier
+            }
+        } catch (Exception e) {
+            log.error("Erreur de communication avec Auth Service", e);
+            throw new RuntimeException("Service d'authentification indisponible. Réessayez plus tard.");
+        }
+
+        if (user == null) {
+            throw new RuntimeException("Erreur critique : L'utilisateur n'a pu ni être trouvé ni être invité.");
+        }
+
+        // 3. À ce stade, le gars existe (soit il était déjà là, soit on vient de le
+        // créer)
+        // On l'ajoute au projet !
+        final Long userId = user.getId();
+        boolean alreadyExists = project.getUserProjects().stream()
+                .anyMatch(up -> up.getUserId().equals(userId));
+
+        if (alreadyExists) {
+            throw new RuntimeException("Cet utilisateur est déjà dans le projet.");
+        }
+
+        ProjectRole projectRole;
+        try {
+            projectRole = ProjectRole.valueOf(request.getRole().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            projectRole = ProjectRole.DEVELOPER; // Valeur par défaut si erreur de typographie
+        }
+
+        UserProject userProject = UserProject.builder()
+                .userId(user.getId())
+                .project(project)
+                .role(projectRole)
+                .assignedById(getCurrentUserId())
+                .build();
+
+        userProjectRepository.save(userProject);
+
+        // 👇 NOUVEAU : On prévient l'utilisateur qu'il a été ajouté au projet
+        // (Notification In-App)
+        java.util.Map<String, String> payload = java.util.Map.of(
+                "projectName", project.getName(),
+                "assignedBy", getCurrentUserId().toString(),
+                "role", projectRole.name());
+
+        NotificationEventDTO notifEvent = NotificationEventDTO.builder()
+                .targetUserId(user.getId()) // 👈 Ici, user.getId() existe et est parfaitement valide !
+                .targetEmail(user.getEmail())
+                .type("TYPE_PROJECT_INVITATION")
+                .payload(payload)
+                .build();
+
+        rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE_NAME, RabbitMQConfig.ROUTING_KEY_NOTIFICATION,
+                notifEvent);
+
+        log.info("L'utilisateur {} a été rattaché avec succès au projet {}", request.getEmail(), project.getName());
+    }
+
+    // On modifie la méthode pour qu'elle RETOURNE le UserSummaryDTO
+    private UserSummaryDTO inviteNewUser(AddCollaboratorDTO request, Project project, String token) {
+        InviteCollaboratorRequestDTO inviteRequest = new InviteCollaboratorRequestDTO(
+                request.getEmail(),
+                request.getFirstName() != null ? request.getFirstName() : "Collaborateur", // 👈 Vrai Prénom
+                request.getLastName() != null ? request.getLastName() : "Invité", // 👈 Vrai Nom
+                project.getName(),
+                project.getCompanyId());
+
+        UserSummaryDTO createdUser = authServiceClient.inviteUser(token, inviteRequest);
+
+        /*
+         * // 👇 NOUVEAU : On prévient l'utilisateur qu'il a été ajouté au projet
+         * (Notification In-App pure)
+         * java.util.Map<String, String> payload = java.util.Map.of(
+         * "projectName", project.getName()
+         * );
+         * 
+         * NotificationEventDTO notifEvent = NotificationEventDTO.builder()
+         * .targetUserId(userId)
+         * .type("TYPE_PROJECT_INVITATION")
+         * .payload(payload)
+         * .build();
+         * 
+         * rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE_NAME,
+         * "notification.routing.key", notifEvent);
+         */
+        log.info("Invitation envoyée avec succès à {}", request.getEmail());
+        return createdUser;
+    }
+
+    // --- Extraction depuis le JWT ---
+
+    private String getRawJwt() {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            return authHeader.substring(7);
+        }
+        return null;
+    }
+
+    private Long getCurrentUserId() {
+        String jwt = getRawJwt();
+        return jwt != null ? jwtService.extractUserId(jwt) : null;
+    }
+
+    // Note : Assurez-vous d'ajouter `companyId` aux claims dans JwtService de
+    // gitdock-auth !
+    private Long getCurrentCompanyId() {
+        String jwt = getRawJwt();
+        // A adapter selon le nom du claim exact que vous avez mis
+        return jwt != null ? jwtService.extractCompanyId(jwt) : null;
+    }
+
+    private boolean hasRole(String roleName) {
+        String jwt = getRawJwt();
+        if (jwt == null)
+            return false;
+        List<String> roles = jwtService.extractRoles(jwt);
+        return roles != null && roles.contains(roleName);
+    }
+
+    private boolean isCurrentUserSuperAdmin() {
+        return hasRole("ROLE_SUPER_ADMIN");
+    }
+
+    private boolean isCurrentUserWorkspaceOwner() {
+        return hasRole("ROLE_WORKSPACE_OWNER");
+    }
+
+    private boolean isCurrentUserCompanyAdmin() {
+        return hasRole("ROLE_COMPANY_ADMIN");
+    }
+
+    public List<CollaboratorGroupedDTO.CollaboratorDTO> getProjectCollaborators(Long projectId) {
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new RuntimeException("Projet introuvable"));
+
+        // Récupère tous les IDs des utilisateurs de ce projet
+        List<Long> userIds = project.getUserProjects().stream()
+                .map(UserProject::getUserId)
+                .collect(Collectors.toList());
+
+        // Va chercher leurs infos (Nom, Prénom, Email) dans gitdock-auth via Feign
+        Map<Long, UserSummaryDTO> usersMap = getManagersData(userIds);
+
+        return project.getUserProjects().stream().map(up -> {
+            UserSummaryDTO user = usersMap.get(up.getUserId());
+            return CollaboratorGroupedDTO.CollaboratorDTO.builder()
+                    .id(up.getUserId())
+                    .firstName(user != null ? user.getFirstName() : "Inconnu")
+                    .lastName(user != null ? user.getLastName() : "")
+                    .email(user != null ? user.getEmail() : "inconnu@gitdock.com")
+                    .role(up.getRole().name())
+                    .status(user != null ? (user.isEnabled() ? "active" : "pending") : "disabled")
+                    .build();
+        }).collect(Collectors.toList());
+    }
+
+    private void verifyProjectAccess(Project project) {
+        // 1. Le Super Admin est le seul à n'avoir aucune restriction
+        if (isCurrentUserSuperAdmin())
+            return;
+
+        Long currentUserId = getCurrentUserId();
+        Long currentCompanyId = getCurrentCompanyId();
+
+        if (currentUserId == null) {
+            throw new RuntimeException("Accès refusé : Utilisateur non identifié.");
+        }
+
+        // 2. Vérification : Est-ce que le projet appartient à la même entreprise que
+        // l'utilisateur ?
+        // C'est la barrière de sécurité la plus importante (Multi-tenant)
+        boolean sameCompany = project.getCompanyId() != null && project.getCompanyId().equals(currentCompanyId);
+
+        // 3. Si c'est un admin de l'entreprise (Workspace Owner ou Company Admin)
+        if (sameCompany && (isCurrentUserWorkspaceOwner() || isCurrentUserCompanyAdmin())) {
+            return;
+        }
+
+        // 4. Si c'est le manager direct du projet (doit quand même être dans la même
+        // entreprise)
+        if (sameCompany && project.getManagedById() != null && project.getManagedById().equals(currentUserId)) {
+            return;
+        }
+
+        // 5. Si c'est un collaborateur invité (on vérifie la table de liaison
+        // user_project)
+        boolean isAssigned = project.getUserProjects().stream()
+                .anyMatch(up -> up.getUserId().equals(currentUserId));
+
+        if (isAssigned)
+            return;
+
+        // Si on arrive ici, c'est une tentative d'intrusion
+        log.warn("Tentative d'accès illégal : User {} a tenté d'accéder au Projet {} de la Company {}",
+                currentUserId, project.getId(), project.getCompanyId());
+        throw new RuntimeException("Accès interdit : Vous n'avez pas les permissions pour consulter ce projet.");
+    }
+
+    @Override
+    @Transactional
+    public void deleteProject(Long id) {
+        Project project = projectRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Projet introuvable"));
+
+        // Vérification des droits
+        boolean canDelete = isCurrentUserSuperAdmin() ||
+                (isCurrentUserCompanyAdmin() && project.getCompanyId().equals(getCurrentCompanyId())) ||
+                (isCurrentUserWorkspaceOwner() && project.getCompanyId().equals(getCurrentCompanyId())) ||
+                (project.getManagedById() != null && project.getManagedById().equals(getCurrentUserId()));
+
+        if (!canDelete) {
+            throw new RuntimeException("Accès refusé : Vous n'avez pas le droit de supprimer ce projet.");
+        }
+
+        // Hibernate s'occupera de supprimer les entités liées (Commits, Branches,
+        // UserProject)
+        // si le "cascade = CascadeType.ALL" est bien configuré sur l'entité Project.
+        projectRepository.delete(project);
+        log.info("Projet supprimé avec succès : {}", project.getName());
+    }
+
+    @Transactional
+    public void assignToGhostUser(Long deletedUserId) {
+        // L'ID 0 est notre convention universelle pour le Ghost User en micro-services
+        Long GHOST_USER_ID = 0L;
+
+        // 1. Retirer le collaborateur supprimé de tous les projets
+        userProjectRepository.deleteByUserId(deletedUserId);
+
+        // 2. Trouver tous les projets gérés par lui, et les donner au Ghost
+        List<Project> managedProjects = projectRepository.findByManagedById(deletedUserId);
+        for (Project project : managedProjects) {
+            project.setManagedById(GHOST_USER_ID);
+        }
+        projectRepository.saveAll(managedProjects);
+
+        // 3. (Optionnel selon tes entités) : Réassigner les commits au Ghost
+        // Si ton entité Commit a un champ "userId", fais une requête JPQL dans
+        // CommitRepository :
+        // @Query("UPDATE Commit c SET c.userId = :ghostId WHERE c.userId = :deletedId")
+        // commitRepository.reassignToGhost(deletedUserId, GHOST_USER_ID);
+
+        log.info("👻 Protocole Fantôme terminé pour l'ex-utilisateur ID {}", deletedUserId);
+    }
+
+    private String getCurrentSubscriptionPlan() {
+        String jwt = getRawJwt();
+        return jwt != null ? jwtService.extractSubscriptionPlan(jwt) : "FREE"; // FREE par défaut si introuvable
+    }
+}
+
+
+------------------------------------------------------------
+
+// File: gitdock-project/src/main/java/edu/ehei/gitdock/gitdockproject/service/SyncResultListener.java
+
+package edu.ehei.gitdock.gitdockproject.service;
+
+import edu.ehei.gitdock.gitdockproject.client.AuthServiceClient;
+import edu.ehei.gitdock.gitdockproject.config.RabbitMQConfig;
+import edu.ehei.gitdock.gitdockproject.dto.CommitSavedEventDTO;
+import edu.ehei.gitdock.gitdockproject.dto.NotificationEventDTO;
+import edu.ehei.gitdock.gitdockproject.dto.SyncResultMessageDTO;
+import edu.ehei.gitdock.gitdockproject.dto.UserSummaryDTO;
+import edu.ehei.gitdock.gitdockproject.model.Branch;
+import edu.ehei.gitdock.gitdockproject.model.Commit;
+import edu.ehei.gitdock.gitdockproject.model.Project;
+import edu.ehei.gitdock.gitdockproject.repository.BranchRepository;
+import edu.ehei.gitdock.gitdockproject.repository.CommitRepository;
+import edu.ehei.gitdock.gitdockproject.repository.ProjectRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+@Slf4j
+public class SyncResultListener {
+
+    private final ProjectRepository projectRepository;
+    private final BranchRepository branchRepository;
+    private final CommitRepository commitRepository;
+    private final AuthServiceClient authServiceClient;
+    private final RabbitTemplate rabbitTemplate;
+
+    @RabbitListener(queues = RabbitMQConfig.QUEUE_SYNC_RESULT)
+    @Transactional
+    public void receiveSyncResult(SyncResultMessageDTO result) {
+        log.info("Réception du résultat de synchronisation pour le projet ID: {}", result.getProjectId());
+
+        if (!result.isSuccess()) {
+            log.error("Échec synchro projet {}: {}", result.getProjectId(), result.getErrorMessage());
+
+            projectRepository.findById(result.getProjectId()).ifPresent(project -> {
+                Map<String, String> payload = Map.of(
+                        "projectName", project.getName(),
+                        "errorMessage", result.getErrorMessage() != null ? result.getErrorMessage() : "Erreur inconnue"
+                );
+
+                NotificationEventDTO event = NotificationEventDTO.builder()
+                        .targetUserId(project.getManagedById())
+                        .type("TYPE_SYNC_FAILED")
+                        .payload(payload)
+                        .build();
+
+                // TODO: Pour Gamification et Task !
+                // Ces services devront déclarer une Queue et faire un Binding
+                // sur la Routing Key "project.commit.saved" dans l'exchange "gitdock.exchange"
+                // Sinon ce message est perdu dans le vide intersidéral de RabbitMQ !
+
+                rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE_NAME, RabbitMQConfig.ROUTING_KEY_NOTIFICATION, event);
+            });
+            return; // On arrête le traitement ici
+        }
+
+        Project project = projectRepository.findById(result.getProjectId())
+                .orElseThrow(() -> new RuntimeException("Projet introuvable pour la synchro"));
+
+        // Sauvegarde des Branches
+        if (result.getBranches() != null) {
+            result.getBranches().forEach(ghBranch -> {
+                Branch branch = Branch.builder()
+                        .name(ghBranch.getName())
+                        .project(project)
+                        .createdAt(LocalDateTime.now())
+                        .updatedAt(LocalDateTime.now())
+                        .build();
+                branchRepository.save(branch);
+            });
+        }
+
+        // Sauvegarde des Commits
+        // 2. IDENTIFICATION DES AUTEURS : LE FAMEUX BATCHING ! 🚀
+        Map<String, Long> emailToUserIdMap = new HashMap<>();
+
+        if (result.getCommits() != null && !result.getCommits().isEmpty()) {
+
+            // a. Extraire la liste stricte des emails uniques de ce lot de commits
+            List<String> uniqueEmails = result.getCommits().stream()
+                    .map(c -> c.getCommit().getAuthor().getEmail())
+                    .filter(Objects::nonNull)
+                    .distinct() // Enlève les doublons
+                    .collect(Collectors.toList());
+
+            // b. Frapper l'API Auth UNE SEULE FOIS pour avoir tous les IDs
+            if (!uniqueEmails.isEmpty()) {
+                try {
+                    List<UserSummaryDTO> matchedUsers = authServiceClient.getUsersByEmailsInternal(uniqueEmails);
+                    for (UserSummaryDTO u : matchedUsers) {
+                        emailToUserIdMap.put(u.getEmail(), u.getId());
+                    }
+                    log.info("Batching Auth réussi : {} auteurs Git rattachés à des comptes GitDock.", matchedUsers.size());
+                } catch (Exception e) {
+                    log.error("Le service Auth n'a pas pu identifier le lot d'auteurs. Raison : {}", e.getMessage());
+                }
+            }
+
+            // 3. Sauvegarde des Commits
+            result.getCommits().forEach(ghCommit -> {
+                // On vérifie que le commit n'existe pas déjà pour éviter les doublons (idempotence)
+                if(!commitRepository.existsByHashAndProjectId(ghCommit.getSha(), project.getId())) {
+
+                    String message = ghCommit.getCommit().getMessage();
+                    if (message != null && message.length() > 255) {
+                        message = message.substring(0, 250) + "...";
+                    }
+
+                    String authorEmail = ghCommit.getCommit().getAuthor().getEmail();
+
+                    Commit commit = Commit.builder()
+                            .hash(ghCommit.getSha())
+                            .message(message)
+                            .authorName(ghCommit.getCommit().getAuthor().getName())
+                            .authorEmail(authorEmail)
+                            // On lit la map ! (Renverra null si l'auteur n'a pas de compte, ce qui est très bien)
+                            .userId(emailToUserIdMap.get(authorEmail))
+                            .committedAt(ghCommit.getCommit().getAuthor().getDate().toLocalDateTime())
+                            .createdAt(LocalDateTime.now())
+                            .updatedAt(LocalDateTime.now())
+                            .project(project)
+                            .additions(ghCommit.getStats() != null ? ghCommit.getStats().getAdditions() : 0)
+                            .deletions(ghCommit.getStats() != null ? ghCommit.getStats().getDeletions() : 0)
+                            .build();
+                    commitRepository.save(commit);
+
+                    commitRepository.save(commit);
+
+                    // 👇 NOUVEAU : On informe le reste du système ! (Gamification, Tasks...) 👇
+                    if (commit.getUserId() != null) {
+                        CommitSavedEventDTO domainEvent = CommitSavedEventDTO.builder()
+                                .commitId(commit.getId())
+                                .hash(commit.getHash())
+                                .message(commit.getMessage())
+                                .projectId(project.getId())
+                                .branchId(commit.getBranch() != null ? commit.getBranch().getId() : null)
+                                .authorUserId(commit.getUserId())
+                                .additions(commit.getAdditions())
+                                .deletions(commit.getDeletions())
+                                .build();
+
+                        rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE_NAME, RabbitMQConfig.ROUTING_KEY_COMMIT_SAVED, domainEvent);
+                    }
+
+                }
+            });
+        }
+
+        project.setUpdatedAt(LocalDateTime.now());
+        projectRepository.save(project);
+
+
+        // 👇 NOUVEAU : 1. Notification de SYNC_COMPLETE pour le demandeur (via un champ userId qu'il faudrait ajouter à SyncResultMessage si ce n'est pas fait)
+        // rabbitTemplate.convertAndSend(... SYNC_COMPLETE ...)
+
+        /*
+        // 👇 NOUVEAU : 2. Fan-out des notifications NEW_COMMIT aux membres du projet
+        if (result.getCommits() != null && !result.getCommits().isEmpty()) {
+            List<Long> memberIds = project.getUserProjects().stream()
+                    .map(up -> up.getUserId())
+                    .collect(Collectors.toList());
+
+            // Pour chaque commit ramené par la synchro
+            result.getCommits().forEach(ghCommit -> {
+                String authorEmail = ghCommit.getCommit().getAuthor().getEmail();
+                Long authorUserId = emailToUserIdMap.get(authorEmail);
+
+                // On notifie tout le monde SAUF l'auteur du commit
+                for (Long memberId : memberIds) {
+                    if (!memberId.equals(authorUserId)) {
+                        java.util.Map<String, String> payload = java.util.Map.of(
+                                "projectName", project.getName(),
+                                "authorName", ghCommit.getCommit().getAuthor().getName(),
+                                "commitMessage", ghCommit.getCommit().getMessage()
+                        );
+
+                        NotificationEventDTO event = NotificationEventDTO.builder()
+                                .targetUserId(memberId)
+                                .type("TYPE_NEW_COMMIT")
+                                .payload(payload)
+                                .build();
+
+                        rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE_NAME, "notification.routing.key", event);
+                    }
+                }
+            });
+        }
+         */
+
+        log.info("Synchronisation terminée et sauvegardée avec succès pour le projet {}", project.getName());
+    }
+}
+
+
+------------------------------------------------------------
+
+// File: gitdock-project/src/main/java/edu/ehei/gitdock/gitdockproject/service/UsesCases/ProjectLocalService.java
+
+package edu.ehei.gitdock.gitdockproject.service.UsesCases;
+
+import edu.ehei.gitdock.gitdockproject.enums.ProjectRole;
+import edu.ehei.gitdock.gitdockproject.enums.ProjectStatus;
+import edu.ehei.gitdock.gitdockproject.dto.SagaProjectCreationRequestDTO;
+import edu.ehei.gitdock.gitdockproject.exception.ResourceNotFoundException;
+import edu.ehei.gitdock.gitdockproject.model.Project;
+import edu.ehei.gitdock.gitdockproject.model.UserProject;
+import edu.ehei.gitdock.gitdockproject.repository.ProjectRepository;
+import edu.ehei.gitdock.gitdockproject.repository.UserProjectRepository;
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import edu.ehei.gitdock.gitdockproject.exception.ResourceNotFoundException;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+public class ProjectLocalService {
+
+    private final ProjectRepository projectRepository;
+    private final UserProjectRepository userProjectRepository;
+
+    @Transactional // Transaction ACID locale (Commit immédiat à la fin de la méthode)
+    public Project createProjectWithStatus(SagaProjectCreationRequestDTO request, Long managerId, Long companyId, ProjectStatus status) {
+        Project project = new Project();
+        project.setName(request.getName());
+        project.setUrl(request.getRepoUrl());
+        project.setManagedById(managerId);
+        project.setStatus(status);
+
+
+        project.setCompanyId(companyId);
+
+        project.setPlatform(edu.ehei.gitdock.gitdockproject.enums.ProjectPlatform.GITHUB);
+        project.setVisibility(edu.ehei.gitdock.gitdockproject.enums.ProjectVisibility.PRIVATE);
+
+        return projectRepository.save(project);
+    }
+
+    @Transactional
+    public Project updateProjectStatus(Long projectId, ProjectStatus newStatus) {
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new ResourceNotFoundException("Projet introuvable"));
+        project.setStatus(newStatus);
+        return projectRepository.save(project);
+    }
+
+    @Transactional
+    public void hardDeleteProject(Long projectId) {
+        projectRepository.deleteById(projectId);
+    }
+
+    @Transactional
+    public void assignTeamToProject(Long projectId, List<Long> teamIds, Long managerId) {
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new ResourceNotFoundException("Projet introuvable"));
+
+        // On assigne chaque membre recommandé par l'IA avec le rôle DEVELOPER par défaut
+        for (Long userId : teamIds) {
+            UserProject userProject = UserProject.builder()
+                    .userId(userId)
+                    .project(project)
+                    .role(ProjectRole.DEVELOPER)
+                    .assignedById(managerId)
+                    .assignedAt(LocalDateTime.now())
+                    .build();
+
+            userProjectRepository.save(userProject);
+        }
+    }
+}
+
+
+------------------------------------------------------------
+
+// File: gitdock-project/src/main/java/edu/ehei/gitdock/gitdockproject/service/UsesCases/ProjectSagaOrchestrator.java
+
+package edu.ehei.gitdock.gitdockproject.service.UsesCases;
+
+import edu.ehei.gitdock.gitdockproject.dto.ProjectResponseDTO;
+import edu.ehei.gitdock.gitdockproject.dto.RepoInitEvent;
+import edu.ehei.gitdock.gitdockproject.dto.SagaProjectCreationRequestDTO;
+import edu.ehei.gitdock.gitdockproject.enums.ProjectStatus;
+import edu.ehei.gitdock.gitdockproject.exception.SagaExecutionException;
+import edu.ehei.gitdock.gitdockproject.mapper.ProjectMapper;
+import edu.ehei.gitdock.gitdockproject.messaging.RabbitMQProducer;
+import edu.ehei.gitdock.gitdockproject.model.Project;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class ProjectSagaOrchestrator {
+
+    // On injecte les services locaux et les clients Feign
+    private final ProjectLocalService projectLocalService;
+    private final RabbitMQProducer rabbitMQProducer;
+
+    /**
+     * Exécute la Saga de création de projet.
+     * Note: PAS de @Transactional global ici ! Une Saga gère des transactions distribuées.
+     */
+    public ProjectResponseDTO executeProjectCreationSaga(SagaProjectCreationRequestDTO request, Long managerId, Long companyId) {
+        log.info("🟢 DÉMARRAGE SAGA : Création du projet '{}'", request.getName());
+
+        // 🔹 ÉTAPE 1 : Transaction Locale (Création en statut PENDING)
+        Project pendingProject = projectLocalService.createProjectWithStatus(request, managerId, companyId, ProjectStatus.PENDING);
+
+        try {
+            // 🔹 ÉTAPE 2 : Appel Externe Synchrone (Vérification et assignation via gitdock-auth)
+            log.info("SAGA - Étape 2 : Assignation de l'équipe {}", request.getTeamIds());
+            projectLocalService.assignTeamToProject(pendingProject.getId(), request.getTeamIds(), managerId);
+
+            // 🔹 ÉTAPE 3 : Appel Externe Asynchrone (RabbitMQ pour gitdock-sync/aspirateur)
+            log.info("SAGA - Étape 3 : Demande d'initialisation du Repo Git");
+            rabbitMQProducer.sendRepoInitRequest(new RepoInitEvent(pendingProject.getId(), request.getRepoUrl()));
+
+            // 🔹 ÉTAPE 4 : Validation (Commit de la Saga)
+            log.info("SAGA - Étape 4 : Succès. Passage au statut ACTIVE");
+            Project activeProject = projectLocalService.updateProjectStatus(pendingProject.getId(), ProjectStatus.ACTIVE);
+
+            // Notification de succès
+            rabbitMQProducer.sendNotification(managerId, "Projet IA Créé", "Le projet " + activeProject.getName() + " et son équipe sont prêts !");
+
+            log.info("✅ FIN SAGA : Projet créé avec succès.");
+            return ProjectMapper.toResponse(activeProject);
+
+        } catch (Exception e) {
+            // 🚨 COMPENSATION (LE ROLLBACK DE LA SAGA)
+            log.error("❌ ÉCHEC SAGA : Erreur rencontrée ({}). Déclenchement de la compensation...", e.getMessage());
+            executeCompensation(pendingProject, managerId, e.getMessage());
+
+            throw new SagaExecutionException("Échec de la création du projet : " + e.getMessage());
+        }
+    }
+
+    /**
+     * Les actions d'annulation si une étape échoue.
+     */
+    private void executeCompensation(Project pendingProject, Long managerId, String reason) {
+        try {
+            // 1. Hard Delete du projet PENDING (ou passage en statut FAILED)
+            projectLocalService.hardDeleteProject(pendingProject.getId());
+            log.info("⏪ ROLLBACK : Projet {} supprimé de la base locale.", pendingProject.getId());
+
+            // 2. Avertir le manager
+            rabbitMQProducer.sendNotification(managerId, "Échec Saga", "Échec de la constitution de l'équipe : " + reason);
+
+        } catch (Exception rollbackEx) {
+            // Le pire scénario : le rollback échoue. En entreprise, on logge ça avec une alerte CRITIQUE
+            // pour qu'un administrateur intervienne manuellement.
+            log.error("💥 ALERTE CRITIQUE : Échec du Rollback pour le projet {}. Intervention manuelle requise. Raison: {}",
+                    pendingProject.getId(), rollbackEx.getMessage());
+        }
+    }
+}
+
+------------------------------------------------------------
+
+// File: gitdock-project/src/main/java/edu/ehei/gitdock/gitdockproject/service/WebhookResultListener.java
+
+package edu.ehei.gitdock.gitdockproject.service;
+
+import edu.ehei.gitdock.gitdockproject.client.AuthServiceClient;
+import edu.ehei.gitdock.gitdockproject.config.RabbitMQConfig;
+import edu.ehei.gitdock.gitdockproject.dto.CommitSavedEventDTO;
+import edu.ehei.gitdock.gitdockproject.dto.NotificationEventDTO;
+import edu.ehei.gitdock.gitdockproject.dto.SyncResultMessageDTO;
+import edu.ehei.gitdock.gitdockproject.dto.UserSummaryDTO;
+import edu.ehei.gitdock.gitdockproject.model.Commit;
+import edu.ehei.gitdock.gitdockproject.model.Project;
+import edu.ehei.gitdock.gitdockproject.repository.CommitRepository;
+import edu.ehei.gitdock.gitdockproject.repository.ProjectRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+@Slf4j
+public class WebhookResultListener {
+
+    private final ProjectRepository projectRepository;
+    private final CommitRepository commitRepository;
+    private final AuthServiceClient authServiceClient;
+    private final RabbitTemplate rabbitTemplate;
+
+    @RabbitListener(queues = RabbitMQConfig.QUEUE_WEBHOOK_RESULT)
+    @Transactional
+    public void receiveWebhookResult(SyncResultMessageDTO result) {
+        log.info("🎯 Webhook intercepté par gitdock-project pour l'URL : {}", result.getRepoUrl());
+
+        if (result.getRepoUrl() == null || result.getCommits() == null || result.getCommits().isEmpty()) {
+            return;
+        }
+
+        // 1. Trouver le ou les projets correspondants à cette URL
+        // On enlève "https://" et ".git" pour faire une recherche large
+        String cleanUrl = result.getRepoUrl().replace("https://", "").replace("http://", "").replace(".git", "");
+        List<Project> matchingProjects = projectRepository.findByUrlContainingIgnoreCase(cleanUrl);
+
+        if (matchingProjects.isEmpty()) {
+            log.warn("⚠️ Aucun projet GitDock ne correspond à l'URL du Webhook : {}", cleanUrl);
+            return;
+        }
+
+        // 2. Identifier les auteurs (Batching avec Auth Service)
+        Map<String, Long> emailToUserIdMap = new HashMap<>();
+        List<String> uniqueEmails = result.getCommits().stream()
+                .map(c -> c.getCommit().getAuthor().getEmail())
+                .filter(Objects::nonNull)
+                .distinct()
+                .collect(Collectors.toList());
+
+        if (!uniqueEmails.isEmpty()) {
+            try {
+                List<UserSummaryDTO> matchedUsers = authServiceClient.getUsersByEmailsInternal(uniqueEmails);
+                for (UserSummaryDTO u : matchedUsers) {
+                    emailToUserIdMap.put(u.getEmail(), u.getId());
+                }
+            } catch (Exception e) {
+                log.error("Erreur lors de l'identification des auteurs du webhook", e);
+            }
+        }
+
+        // 3. Sauvegarder les commits et notifier pour CHAQUE projet concerné
+        for (Project project : matchingProjects) {
+
+            // Extraire tous les membres du projet pour le Fan-out des notifications
+            List<Long> memberIds = project.getUserProjects().stream()
+                    .map(up -> up.getUserId())
+                    .collect(Collectors.toList());
+
+            result.getCommits().forEach(ghCommit -> {
+                // Sauvegarde du commit s'il n'existe pas déjà
+                if (!commitRepository.existsByHashAndProjectId(ghCommit.getSha(), project.getId())) {
+
+                    String message = ghCommit.getCommit().getMessage();
+                    if (message != null && message.length() > 255) {
+                        message = message.substring(0, 250) + "...";
+                    }
+
+                    String authorEmail = ghCommit.getCommit().getAuthor().getEmail();
+                    Long authorUserId = emailToUserIdMap.get(authorEmail);
+
+                    Commit commit = Commit.builder()
+                            .hash(ghCommit.getSha())
+                            .message(message)
+                            .authorName(ghCommit.getCommit().getAuthor().getName())
+                            .authorEmail(authorEmail)
+                            .userId(authorUserId)
+                            .committedAt(ghCommit.getCommit().getAuthor().getDate().toLocalDateTime())
+                            .createdAt(LocalDateTime.now())
+                            .updatedAt(LocalDateTime.now())
+                            .project(project)
+                            .build();
+                    commitRepository.save(commit);
+
+                    // 🔔 NOTIFICATION TEMPS RÉEL AUX MEMBRES !
+                    for (Long memberId : memberIds) {
+                        // On ne notifie pas le gars qui vient de faire le Push !
+                        if (!memberId.equals(authorUserId)) {
+                            Map<String, String> payload = Map.of(
+                                    "projectName", project.getName(),
+                                    "authorName", commit.getAuthorName(),
+                                    "commitMessage", commit.getMessage()
+                            );
+
+                            NotificationEventDTO event = NotificationEventDTO.builder()
+                                    .targetUserId(memberId)
+                                    .type("TYPE_NEW_COMMIT")
+                                    .payload(payload)
+                                    .build();
+
+                            rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE_NAME, RabbitMQConfig.ROUTING_KEY_NOTIFICATION, event);
+                        }
+                    }
+
+                    commitRepository.save(commit);
+
+                    // 👇 On informe le reste du système ! (Gamification, Tasks...) 👇
+                    if (commit.getUserId() != null) {
+                        CommitSavedEventDTO domainEvent = CommitSavedEventDTO.builder()
+                                .commitId(commit.getId())
+                                .hash(commit.getHash())
+                                .message(commit.getMessage())
+                                .projectId(project.getId())
+                                .branchId(commit.getBranch() != null ? commit.getBranch().getId() : null)
+                                .authorUserId(commit.getUserId())
+                                .additions(commit.getAdditions())
+                                .deletions(commit.getDeletions())
+                                .build();
+
+                        rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE_NAME, RabbitMQConfig.ROUTING_KEY_COMMIT_SAVED, domainEvent);
+                    }
+                }
+            });
+
+            // Met à jour la date de dernière activité du projet
+            project.setUpdatedAt(LocalDateTime.now());
+            projectRepository.save(project);
+            log.info("✅ {} nouveaux commits ajoutés au projet '{}'", result.getCommits().size(), project.getName());
+        }
+    }
+}
+
+------------------------------------------------------------
+

@@ -1,0 +1,31 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: gitdock-auth
+
+  profiles:
+    active: docker
+
+  datasource:
+    url: jdbc:postgresql://postgres:5432/gitdock_auth
+    username: postgres
+    password: maryam@123
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+application:
+  security:
+    jwt:
+      secret: 95ac6e034604c3f56bdb1b66a36e91a0e543bb91b4f1f1e6cb6c8dc0791d7535956191e8
+      expiration: 86400000
+      refresh-token:
+        expiration: 604800000
