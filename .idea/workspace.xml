@@ -5,110 +5,48 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="3071480b-f974-4852-8c08-227d0d888f2f" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/encodings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/encodings.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-ai/app_dashboard.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-ai/app_dashboard.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-ai/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-ai/requirements.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-ai/src/core/anomaly_engine.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-ai/src/core/anomaly_engine.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-ai/src/core/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-ai/src/core/config.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-ai/src/data/fetcher.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-ai/src/data/fetcher.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-ai/src/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-ai/src/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-ai/src/rag/commit_store.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-ai/src/rag/commit_store.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-ai/src/routes/prediction.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-ai/src/routes/prediction.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-ai/src/schemas/report_schemas.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-ai/src/schemas/report_schemas.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-auth/src/main/java/edu/ehei/gitdock/gitdockauth/controller/UserAccountController.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-auth/src/main/java/edu/ehei/gitdock/gitdockauth/controller/UserAccountController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-auth/src/main/java/edu/ehei/gitdock/gitdockauth/repository/UserAccountRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-auth/src/main/java/edu/ehei/gitdock/gitdockauth/repository/UserAccountRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-auth/src/main/java/edu/ehei/gitdock/gitdockauth/security/SecurityConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-auth/src/main/java/edu/ehei/gitdock/gitdockauth/security/SecurityConfig.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-auth/src/main/java/edu/ehei/gitdock/gitdockauth/service/UserAccountServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-auth/src/main/java/edu/ehei/gitdock/gitdockauth/service/UserAccountServiceImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-auth/src/main/java/edu/ehei/gitdock/gitdockauth/service/interfaces/IUserAccountService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-auth/src/main/java/edu/ehei/gitdock/gitdockauth/service/interfaces/IUserAccountService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-auth/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-auth/src/main/resources/application.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/INSTRUCTIONS_GAMIFICATION.md" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/INSTRUCTIONS_GAMIFICATION.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Controllers/BadgesController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Controllers/BadgesController.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Controllers/LevelsController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Controllers/LevelsController.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Controllers/TagsController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Controllers/TagsController.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Controllers/UserBadgeController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Controllers/UserBadgeController.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Controllers/XpConfigController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Controllers/XpConfigController.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/DTOs/BadgeResponseDto.cs" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/DTOs/BadgeResponseDto.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/DTOs/CreateBadgeDto.cs" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/DTOs/CreateBadgeDto.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Data/ApplicationDbContext.cs" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Data/ApplicationDbContext.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Domain/Badge.cs" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Domain/Badge.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Domain/BadgeType.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Mappers/BadgeMapper.cs" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Mappers/BadgeMapper.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Migrations/20260329134601_InitialCreate.Designer.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Migrations/20260329134601_InitialCreate.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Migrations/20260329145129_RenameXpColumn.Designer.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Migrations/20260329145129_RenameXpColumn.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Migrations/20260405120830_AddTagsAndLevelsSchema.Designer.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Migrations/20260405120830_AddTagsAndLevelsSchema.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Migrations/20260405122216_FixRelationsTagsLevels.Designer.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Migrations/20260405122216_FixRelationsTagsLevels.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Migrations/20260405122439_AddLevelsAndTagsFullSchema.Designer.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Migrations/20260405122439_AddLevelsAndTagsFullSchema.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Migrations/20260405131944_AddSoftDeleteAndAuditFields.Designer.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Migrations/20260405131944_AddSoftDeleteAndAuditFields.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Migrations/20260405132143_UpdateSoftDeleteAndAuditFields.Designer.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Migrations/20260405132143_UpdateSoftDeleteAndAuditFields.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Migrations/20260406085324_AddXpConfig.Designer.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Migrations/20260406085324_AddXpConfig.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Migrations/ApplicationDbContextModelSnapshot.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/DTOs/CreateLevelDto.cs" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/DTOs/CreateLevelDto.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Mappers/LevelMapper.cs" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Mappers/LevelMapper.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Messaging/Consumers/CommitSavedConsumer.cs" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Messaging/Consumers/CommitSavedConsumer.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Messaging/Consumers/GamificationConsumer.cs" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Messaging/Consumers/GamificationConsumer.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Messaging/Events/CommitSavedEvent.cs" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Messaging/Events/CommitSavedEvent.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Messaging/Events/PullRequestMergedEvent.cs" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Messaging/Events/PullRequestMergedEvent.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Program.cs" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Program.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Repositories/ILevelRepository.cs" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Repositories/ILevelRepository.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Repositories/LevelRepository.cs" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Repositories/LevelRepository.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Repositories/TagRespository.cs" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Repositories/TagRespository.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Services/BadgeService.cs" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Services/BadgeService.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Services/IBadgeService.cs" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Services/IBadgeService.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Services/ILevelService.cs" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Services/ILevelService.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Services/IUserBadgeService.cs" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Services/IUserBadgeService.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Services/IUserProgressService.cs" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Services/IUserProgressService.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Services/LevelService.cs" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Services/LevelService.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Services/TagService.cs" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Services/TagService.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Services/XpConfigService.cs" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Services/XpConfigService.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/appsettings.json" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/appsettings.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/backend.csproj" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/backend.csproj" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/frontend/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/frontend/README.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/frontend/index.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/frontend/package-lock.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/frontend/package.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/frontend/postcss.config.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/frontend/public/favicon.ico" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/frontend/src/App.vue" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/frontend/src/Services/BadgeService.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/frontend/src/Services/LevelService.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/frontend/src/Services/TagService.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/frontend/src/assets/main.css" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/frontend/src/components/dashboard/manager/BadgeSection.vue" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/frontend/src/components/dashboard/manager/LevelSection.vue" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/frontend/src/components/dashboard/manager/TagSection.vue" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/frontend/src/components/dashboard/user/UserBadges.vue" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/frontend/src/components/dashboard/user/UserHeader.vue" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/frontend/src/components/dashboard/user/UserStats.vue" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/frontend/src/main.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/frontend/src/router/index.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/frontend/src/views/DashboardView.vue" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/frontend/src/views/UserDashboardView.vue" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/frontend/tailwind.config.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/frontend/tsconfig.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/frontend/vite.config.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gateway/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gateway/src/main/resources/application.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-project/src/main/java/edu/ehei/gitdock/gitdockproject/security/SecurityConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-project/src/main/java/edu/ehei/gitdock/gitdockproject/security/SecurityConfig.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Services/UserBadgeService.cs" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Services/UserBadgeService.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Services/UserProgressService.cs" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-gamification/backend/backend/Services/UserProgressService.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-notification/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-notification/src/main/resources/application.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-project/src/main/java/edu/ehei/gitdock/gitdockproject/messaging/RabbitMQProducer.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-project/src/main/java/edu/ehei/gitdock/gitdockproject/messaging/RabbitMQProducer.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-project/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/gitdock-project/src/main/resources/application.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/gitdock-backend/infrastructure/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/backend/gitdock-backend/infrastructure/docker-compose.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/gitdock-frontend/.env" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/gitdock-frontend/.env" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/gitdock-frontend/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/gitdock-frontend/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/gitdock-frontend/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/gitdock-frontend/package.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/gitdock-frontend/src/components/gamification/dashboard/manager/BadgeSection.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/gitdock-frontend/src/components/gamification/dashboard/manager/BadgeSection.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/gitdock-frontend/src/components/gamification/dashboard/user/UserStats.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/gitdock-frontend/src/components/gamification/dashboard/user/UserStats.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/gitdock-frontend/src/env.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/gitdock-frontend/src/env.d.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/gitdock-frontend/src/layouts/AppLayout.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/gitdock-frontend/src/layouts/AppLayout.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/gitdock-frontend/src/router/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/gitdock-frontend/src/router/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/gitdock-frontend/src/components/gamification/dashboard/manager/LevelSection.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/gitdock-frontend/src/components/gamification/dashboard/manager/LevelSection.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/gitdock-frontend/src/components/gamification/dashboard/manager/TagSection.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/gitdock-frontend/src/components/gamification/dashboard/manager/TagSection.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/gitdock-frontend/src/services/BadgeService.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/gitdock-frontend/src/services/BadgeService.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/gitdock-frontend/src/services/LevelService.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/gitdock-frontend/src/services/LevelService.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/gitdock-frontend/src/services/TagService.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/gitdock-frontend/src/services/TagService.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/gitdock-frontend/src/services/UserBadgeService.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/gitdock-frontend/src/services/UserBadgeService.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/gitdock-frontend/src/services/UserProgressService.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/gitdock-frontend/src/services/UserProgressService.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/gitdock-frontend/src/services/XpConfigService.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/gitdock-frontend/src/services/XpConfigService.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/gitdock-frontend/src/services/api.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/gitdock-frontend/src/services/api.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/gitdock-frontend/src/services/authService.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/gitdock-frontend/src/services/authService.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/gitdock-frontend/src/services/notificationService.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/gitdock-frontend/src/services/notificationService.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/gitdock-frontend/src/stores/authStore.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/gitdock-frontend/src/stores/authStore.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/gitdock-frontend/src/views/auth/ActivationView.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/gitdock-frontend/src/views/auth/ActivationView.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/gitdock-frontend/src/views/gamification/DashboardView.vue" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/gitdock-frontend/src/views/gamification/UserDashboardView.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/gitdock-frontend/src/views/gamification/UserDashboardView.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/gitdock-frontend/src/views/task/AddTask.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/gitdock-frontend/src/views/task/AddTask.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/gitdock-frontend/src/views/task/UpdateTask.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/gitdock-frontend/src/views/task/UpdateTask.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/gitdock-frontend/src/views/task/ViewTask/TaskAll.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/gitdock-frontend/src/views/task/ViewTask/TaskAll.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/gitdock-frontend/vite.config.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/gitdock-frontend/vite.config.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/gitdock-frontend/src/views/gamification/DashboardView.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/gitdock-frontend/src/views/gamification/DashboardView.vue" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -125,7 +63,7 @@
     </option>
   </component>
   <component name="Git.Settings">
-    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/backend/gitdock-backend/gitdock-ai" />
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
     <option name="ROOT_SYNC" value="DONT_SYNC" />
   </component>
   <component name="KubernetesApiPersistence">{}</component>
@@ -150,62 +88,62 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Maven.gitdock-auth [clean].executor": "Run",
-    "Maven.gitdock-auth [compile].executor": "Run",
-    "Maven.gitdock-auth [install].executor": "Run",
-    "Maven.gitdock-auth [package].executor": "Run",
-    "Maven.gitdock-auth [test].executor": "Run",
-    "Maven.gitdock-backend [clean].executor": "Run",
-    "Maven.gitdock-backend [install].executor": "Run",
-    "Maven.gitdock-project [package].executor": "Run",
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "Notification.DisplayName-DoNotAsk-DatabaseConfigFileWatcher.found": "New/updated database configurations found",
-    "Notification.DoNotAsk-DatabaseConfigFileWatcher.found": "true",
-    "RequestMappingsPanelOrder0": "0",
-    "RequestMappingsPanelOrder1": "1",
-    "RequestMappingsPanelWidth0": "75",
-    "RequestMappingsPanelWidth1": "75",
-    "RunOnceActivity.MCP Project settings loaded": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
-    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "Spring Boot.GitdockAuthApplication.executor": "Run",
-    "Spring Boot.GitdockDiscoveryApplication.executor": "Run",
-    "Spring Boot.GitdockGatewayApplication.executor": "Run",
-    "Spring Boot.GitdockNotificationApplication.executor": "Run",
-    "Spring Boot.GitdockProjectApplication.executor": "Run",
-    "Spring Boot.GitdockSyncApplication.executor": "Run",
-    "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
-    "git-widget-placeholder": "gitdock-ai",
-    "ignore.virus.scanning.warn.message": "true",
-    "javascript.preferred.runtime.type.id": "node",
-    "junie.onboarding.icon.badge.shown": "true",
-    "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "C:/Users/dell-info/Desktop/gitdock-api/backend/gitdock-backend/gitdock-auth/src/main/resources/templates",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "project.structure.last.edited": "Modules",
-    "project.structure.proportion": "0.15",
-    "project.structure.side.proportion": "0.46896553",
-    "run.configurations.included.in.services": "true",
-    "settings.editor.selected.configurable": "settings.javascript.runtime",
-    "to.speed.mode.migration.done": "true",
-    "ts.external.directory.path": "C:\\Program Files\\JetBrains\\IntelliJ IDEA 2025.3.2\\plugins\\javascript-plugin\\jsLanguageServicesImpl\\external",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Maven.gitdock-auth [clean].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.gitdock-auth [compile].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.gitdock-auth [install].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.gitdock-auth [package].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.gitdock-auth [test].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.gitdock-backend [clean].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.gitdock-backend [install].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.gitdock-project [package].executor&quot;: &quot;Run&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;Notification.DisplayName-DoNotAsk-DatabaseConfigFileWatcher.found&quot;: &quot;New/updated database configurations found&quot;,
+    &quot;Notification.DoNotAsk-DatabaseConfigFileWatcher.found&quot;: &quot;true&quot;,
+    &quot;RequestMappingsPanelOrder0&quot;: &quot;0&quot;,
+    &quot;RequestMappingsPanelOrder1&quot;: &quot;1&quot;,
+    &quot;RequestMappingsPanelWidth0&quot;: &quot;75&quot;,
+    &quot;RequestMappingsPanelWidth1&quot;: &quot;75&quot;,
+    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;Spring Boot.GitdockAuthApplication.executor&quot;: &quot;Run&quot;,
+    &quot;Spring Boot.GitdockDiscoveryApplication.executor&quot;: &quot;Run&quot;,
+    &quot;Spring Boot.GitdockGatewayApplication.executor&quot;: &quot;Run&quot;,
+    &quot;Spring Boot.GitdockNotificationApplication.executor&quot;: &quot;Run&quot;,
+    &quot;Spring Boot.GitdockProjectApplication.executor&quot;: &quot;Run&quot;,
+    &quot;Spring Boot.GitdockSyncApplication.executor&quot;: &quot;Run&quot;,
+    &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;gitdock/integration-gamification-ai&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;javascript.preferred.runtime.type.id&quot;: &quot;node&quot;,
+    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/dell-info/Desktop/gitdock-api/backend/gitdock-backend/gitdock-auth/src/main/resources/templates&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;Modules&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.46896553&quot;,
+    &quot;run.configurations.included.in.services&quot;: &quot;true&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;settings.javascript.runtime&quot;,
+    &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
+    &quot;ts.external.directory.path&quot;: &quot;C:\\Program Files\\JetBrains\\IntelliJ IDEA 2025.3.2\\plugins\\javascript-plugin\\jsLanguageServicesImpl\\external&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   },
-  "keyToStringList": {
-    "vue.recent.templates": [
-      "Vue Composition API Component"
+  &quot;keyToStringList&quot;: {
+    &quot;vue.recent.templates&quot;: [
+      &quot;Vue Composition API Component&quot;
     ]
   }
-}]]></component>
+}</component>
   <component name="ReactorSettings">
     <option name="notificationShown" value="true" />
   </component>
@@ -389,7 +327,10 @@
       <workItem from="1777551594879" duration="5271000" />
       <workItem from="1777565064792" duration="2532000" />
       <workItem from="1777626563314" duration="19840000" />
-      <workItem from="1777703979741" duration="27906000" />
+      <workItem from="1777703979741" duration="43409000" />
+      <workItem from="1777766637223" duration="724000" />
+      <workItem from="1777796252940" duration="32055000" />
+      <workItem from="1777897182061" duration="8801000" />
     </task>
     <servers />
   </component>
