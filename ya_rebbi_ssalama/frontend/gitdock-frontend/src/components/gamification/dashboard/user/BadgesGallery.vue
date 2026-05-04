@@ -1,8 +1,6 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
-import { useAuthStore } from '@/stores/authStore'
+import { ref, onMounted } from 'vue'
 import { userBadgeService } from '@/services/UserBadgeService'
-import { badgeService } from '@/services/BadgeService'
 
 // Local interface to avoid Namespace conflict TS2709
 interface GalleryBadge {
@@ -15,17 +13,10 @@ interface GalleryBadge {
   xp: number;
 }
 
-const authStore = useAuthStore()
 const loading = ref<boolean>(true)
 
 const achievements = ref<GalleryBadge[]>([])
 const allBadges = ref<GalleryBadge[]>([])
-
-// Fix TS2345: Ensure userId is always a string and never undefined
-const userId = computed((): string => {
-  const id = (authStore as any).userId
-  return id ? String(id) : ""
-})
 
 const mapBadge = (data: any[]): GalleryBadge[] => {
   return (data || []).map(b => ({
@@ -40,17 +31,11 @@ const mapBadge = (data: any[]): GalleryBadge[] => {
 }
 
 const loadGalleryData = async (): Promise<void> => {
-  // Safety check to prevent passing undefined to services
-  if (!userId.value) {
-    loading.value = false
-    return
-  }
-
   loading.value = true
   try {
     const [userBadges, globalBadges] = await Promise.all([
-      userBadgeService.getByUserId(userId.value), // Now receives string, not undefined
-      badgeService.getAll()
+      userBadgeService.getMyBadges(),
+      userBadgeService.getAllAvailableBadges()
     ])
 
     achievements.value = mapBadge(userBadges)

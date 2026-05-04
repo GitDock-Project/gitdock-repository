@@ -16,6 +16,7 @@ import ProjectBranchesView from '@/views/projects/ProjectBranchesView.vue'
 import BranchCommitsView from '@/views/projects/BranchCommitsView.vue'
 
 import SuperAdminDashboard from '@/views/dashboard/SuperAdminDashboard.vue'
+import DashboardCompany from '@/views/dashboard/DashboardCompany.vue'
 import RouterAppLayout from '@/layouts/RouterAppLayout.vue'
 
 import DashboardTask from '@/views/task/DashboardTask.vue'
@@ -32,6 +33,7 @@ declare module 'vue-router' {
     interface RouteMeta {
         requiresAuth?: boolean
         requiresSuperAdmin?: boolean
+        requiresCompanyAdmin?: boolean
         guest?: boolean
     }
 }
@@ -68,6 +70,13 @@ const routes: RouteRecordRaw[] = [
         name: 'admin-dashboard',
         component: SuperAdminDashboard,
         meta: { requiresAuth: true, requiresSuperAdmin: true },
+    },
+
+    {
+        path: '/company/dashboard',
+        name: 'company-dashboard',
+        component: DashboardCompany,
+        meta: { requiresAuth: true, requiresCompanyAdmin: true },
     },
 
     // --- Dashboard (layout avec enfants) ---

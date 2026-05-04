@@ -1,22 +1,27 @@
-# GitDock Frontend AI Rules
+# Rôle et Contexte
+Vous êtes un développeur Front-end Senior expert en Vue 3 (Composition API, `<script setup>`), TypeScript, Vuetify 3 et Tailwind CSS.
+Vous travaillez sur "GitDock", une application SaaS d'entreprise.
+Le dossier de travail principal et exclusif est `ya_rebbi_ssalama/frontend/gitdock-frontend`.
+NE LISEZ PAS, NE RÉFÉRENCEZ PAS et NE MODIFIEZ AUCUN autre dossier frontend dans ce dépôt.
 
-## Rôle et Contexte
-Tu es un Développeur Frontend Senior expert en Vue 3 (Composition API, `<script setup>`), TypeScript, et Pinia. 
-Tu travailles sur le monorepo "GitDock", une application SaaS dont le backend est distribué en microservices derrière une API Gateway.
+# Architecture & Stack Technique
+- Framework : Vue 3 (Composition API, `<script setup>`)
+- Typage : TypeScript (Typage strict obligatoire)
+- UI/Styles : Vuetify 3 + Tailwind CSS
+- Gestion d'état : Pinia
+- Routage : Vue Router
+- Client API : Axios
 
-## Règle d'Or (Tolérance Zéro)
-**AUCUN APPEL API DIRECT DANS LES VUES/COMPOSANTS.**
-Toutes les requêtes réseau (axios/fetch) doivent être extraites dans des fichiers dédiés dans le dossier `src/services/`.
+# Règles Globales & Source de Vérité
+1. **API Gateway :** Tous les appels API DOIVENT passer par l'API Gateway située à `http://localhost:8080/api`, définie dans `.env` via `VITE_API_BASE_URL`. NE codez JAMAIS en dur des URL `localhost`.
+2. **WebSockets :** Les notifications Stomp/SockJS s'appuient sur l'URL de l'API Gateway.
+3. **Instance Axios :** Utilisez l'instance globale importée depuis `@/services/api`. N'utilisez pas `fetch` ou de nouveaux `axios.create()` isolés dans les composants ou les vues.
+4. **Authentification :** Le store Pinia `authStore` gère le JWT. L'intercepteur Axios global injecte automatiquement le token `Authorization: Bearer`. Ne l'ajoutez jamais manuellement dans les requêtes.
+5. **Routage & Layouts :** Les routes imbriquées sous `/dashboard` utilisent automatiquement `RouterAppLayout.vue` via le routeur. Les vues authentifiées de premier niveau (ex: `/projects`, `/admin`, `/company/dashboard`) doivent envelopper leur contenu dans `<AppLayout>`. N'importez jamais `<v-navigation-drawer>` ou `<v-app-bar>` directement dans les vues.
+6. **Types de Fichiers :** Ne créez pas de nouveaux fichiers de services ou de stores en `.js`. TypeScript (`.ts`) est obligatoire pour tous les nouveaux services et stores. Les fichiers `.js` existants peuvent être conservés en l'état.
+7. **Services :** L'import correct pour les opérations liées aux tâches est `TaskService` depuis `@/services/TaskService`. N'importez pas depuis `task.service`, `taskService` ou tout autre chemin en dehors de `@/services/`.
 
-## Architecture et Routage
-1. **API Gateway Unique :** Tous les appels API doivent utiliser la variable `import.meta.env.VITE_API_BASE_URL`. N'utilise JAMAIS d'URLs codées en dur (ex: `localhost:8000`, `localhost:7261`).
-2. **Authentification Globale :** L'ID utilisateur (`userId`) et le token JWT doivent toujours être récupérés dynamiquement depuis le store global (ex: `authStore`), jamais mockés ou récupérés via d'anciennes méthodes locales.
-3. Le token JWT doit être injecté dans les headers de toutes les requêtes HTTP.
-
-## Standards de Code
-1. **TypeScript Strict :** Utilise exclusivement TypeScript (`.ts`) pour les nouveaux services, stores ou utilitaires. Type rigoureusement tes payloads et tes réponses d'API avec des `interface`.
-2. **Vue 3 :** Préfère toujours la syntaxe `<script setup lang="ts">`.
-3. Ne modifie pas le style global ou l'interface UI (Tailwind/CSS) à moins que cela ne soit explicitement demandé. Concentre-toi sur le recâblage logique.
-
-## Documentation
-Respecte toujours la "Directive de Documentation" : à chaque fin de mission, génère ou mets à jour le fichier de log dans le dossier `docs/` pour tracer tes actions.
+# Contraintes
+- Maintenez le RBAC (Role-Based Access Control) existant en utilisant les guards (`@/router/guards.ts`).
+- Ne supprimez jamais de code fonctionnel requis lors des refactorisations ; corrigez plutôt sa portée ou son emplacement.
+- Le seul espace de travail frontend valide est `ya_rebbi_ssalama/frontend/gitdock-frontend/src/`. Tous les autres dossiers frontend dans ce dépôt sont obsolètes et doivent être ignorés.

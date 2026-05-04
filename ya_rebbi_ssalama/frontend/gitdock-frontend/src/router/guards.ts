@@ -15,6 +15,15 @@ export function setupRouterGuards(router: Router): void {
             return next('/projects')
         }
 
+        // Route Company Admin → vérifier le rôle
+        if (
+            to.meta.requiresCompanyAdmin &&
+            authStore.role !== 'ROLE_COMPANY_ADMIN' &&
+            authStore.role !== 'ROLE_SUPER_ADMIN'
+        ) {
+            return next('/projects')
+        }
+
         // 3. Route guest → redirige si déjà connecté
         if (to.meta.guest && authStore.isAuthenticated) {
             return next('/projects')

@@ -266,12 +266,6 @@ const executeSaga = async () => {
   } finally {
     isSagaRunning.value = false
   }
-
-  const response = await api.post('/ai/team-builder', {
-      question: text,
-      history: messages.value.slice(0, -1), // 👈 On envoie tout sauf la question actuelle
-      provider: 'gemini'
-    })
 }
 </script>
 
