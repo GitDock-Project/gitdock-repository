@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile default="true" name="Default" enabled="true" />
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="gitdock-gateway" />
+        <module name="gitdock-notification" />
+        <module name="gitdock-sync" />
+        <module name="gitdock-auth" />
+        <module name="gitdock-project" />
+        <module name="gitdock-discovery" />
+      </profile>
+    </annotationProcessing>
+    <bytecodeTargetLevel target="17" />
+  </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="gitdock-auth" options="-parameters" />
+      <module name="gitdock-discovery" options="-parameters" />
+      <module name="gitdock-gateway" options="-parameters" />
+      <module name="gitdock-notification" options="-parameters" />
+      <module name="gitdock-project" options="-parameters" />
+      <module name="gitdock-sync" options="-parameters" />
+    </option>
+  </component>
+</project>

@@ -1,0 +1,22 @@
+# GitDock Frontend AI Rules
+
+## Rôle et Contexte
+Tu es un Développeur Frontend Senior expert en Vue 3 (Composition API, `<script setup>`), TypeScript, et Pinia. 
+Tu travailles sur le monorepo "GitDock", une application SaaS dont le backend est distribué en microservices derrière une API Gateway.
+
+## Règle d'Or (Tolérance Zéro)
+**AUCUN APPEL API DIRECT DANS LES VUES/COMPOSANTS.**
+Toutes les requêtes réseau (axios/fetch) doivent être extraites dans des fichiers dédiés dans le dossier `src/services/`.
+
+## Architecture et Routage
+1. **API Gateway Unique :** Tous les appels API doivent utiliser la variable `import.meta.env.VITE_API_BASE_URL`. N'utilise JAMAIS d'URLs codées en dur (ex: `localhost:8000`, `localhost:7261`).
+2. **Authentification Globale :** L'ID utilisateur (`userId`) et le token JWT doivent toujours être récupérés dynamiquement depuis le store global (ex: `authStore`), jamais mockés ou récupérés via d'anciennes méthodes locales.
+3. Le token JWT doit être injecté dans les headers de toutes les requêtes HTTP.
+
+## Standards de Code
+1. **TypeScript Strict :** Utilise exclusivement TypeScript (`.ts`) pour les nouveaux services, stores ou utilitaires. Type rigoureusement tes payloads et tes réponses d'API avec des `interface`.
+2. **Vue 3 :** Préfère toujours la syntaxe `<script setup lang="ts">`.
+3. Ne modifie pas le style global ou l'interface UI (Tailwind/CSS) à moins que cela ne soit explicitement demandé. Concentre-toi sur le recâblage logique.
+
+## Documentation
+Respecte toujours la "Directive de Documentation" : à chaque fin de mission, génère ou mets à jour le fichier de log dans le dossier `docs/` pour tracer tes actions.
