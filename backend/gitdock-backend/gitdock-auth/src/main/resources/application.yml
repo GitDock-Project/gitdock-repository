@@ -84,7 +84,7 @@ application:
     jwt:
       # La clé secrète utilisée pour signer les tokens (HMAC-SHA).
       # Elle est injectée dans JwtService.java via @Value("${application.security.jwt.secret}")
-      secret: 95ac6e034604c3f56bdb1b66a36e91a0e543bb91b4f1f1e6cb6c8dc0791d7535956191e8
+      secret: GitDock_Super_Secret_Key_2026_Secure_Long_Enough_32_Chars
       expiration: 86400000 # 24h (en millisecondes) pour l'Access Token
       refresh-token:
         expiration: 604800000 # 7 jours (en millisecondes) pour le Refresh Token
