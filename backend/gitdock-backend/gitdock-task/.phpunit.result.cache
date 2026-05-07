@@ -1,0 +1,1 @@
+{"version":2,"defects":{"App\\Tests\\Client\\AuthClientTest::testGetUserByIdReturnsNullOnError":7},"times":{"App\\Tests\\Client\\ProjectClientTest::testGetProjectReturnsData":0.027,"App\\Tests\\Client\\AuthClientTest::testGetUserByIdReturnsData":1.772,"App\\Tests\\Client\\AuthClientTest::testGetUserByIdReturnsNullOnError":0.001}}
