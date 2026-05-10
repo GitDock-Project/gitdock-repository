@@ -1,0 +1,92 @@
+=== INFRASTRUCTURE & BDD (DOCKER) ===
+PostgreSQL (Global) : localhost:5432 (User: postgres, Pass: postgres)
+PgAdmin (Interface Postgres) : http://localhost:5050 (User: admin@gitdock.com, Pass: admin)
+MySQL (Global) : localhost:3306 (User: root, Pass: root)
+PhpMyAdmin (Interface MySQL) : http://localhost:8088
+MongoDB (Global) : localhost:27017 (User: mongodb, Pass: mongodb)
+Mongo Express (Interface MongoDB) : http://localhost:8086
+RabbitMQ (AMQP) : localhost:5672 (User: guest, Pass: guest)
+RabbitMQ (Management UI) : http://localhost:15672
+Redis (Cache) : localhost:6379
+ChromaDB (Vectoriel) : http://localhost:8010 (Port interne 8000)
+Ollama (Local LLM) : http://localhost:11434 (Tourne désormais dans le réseau Docker gitdock_net)
+Dozzle (Logs en temps réel) : http://localhost:8887
+
+=== MICROSERVICES BACKEND (Mode "Pure Dev" / Lancés via IDEs) ===
+API Gateway (Spring Cloud) : http://localhost:8080 (Point d'entrée global Frontend -> Backend)
+Eureka Discovery : http://localhost:8761 (Seul service Java lancé via Docker)
+GitDock Auth (Java) : http://localhost:8081 (DB: gitdock_auth sur Postgres)
+GitDock Project (Java) : http://localhost:8083 (DB: gitdock_project sur Postgres)
+GitDock Sync (Java) : http://localhost:8084 (Worker asynchrone, pas de DB propre)
+GitDock Notification (Java) : http://localhost:8085 (DB: gitdock_notification sur Postgres)
+GitDock Gamification (.NET 9) : http://localhost:5292 (DB: gitdock_gamification sur Postgres)
+GitDock Task (Symfony/PHP) : http://localhost:8089 (DB: gitdock_tasks sur MySQL)
+GitDock YAM (FastAPI/Python) : http://localhost:8012 (Port interne 8010) -> Swagger UI: http://localhost:8012/docs
+gitdock-ai (FastAPI/Python) : http://localhost:8010
+GitDock Sentinel (AI Worker) : En cours de développement...
+
+LAUNCH gitdock-task using WINDOWS CLI : symfony server:start --port=8089
+
+LAUNCH gitdock-ai using self local variables : 
+set DB_HOST=127.0.0.1 && set DB_PORT=5432 && set DB_USER=postgres && set DB_PASSWORD=postgres && set DB_NAME=gitdock_project && streamlit run app_dashboard.py
+
+Launch gitdock-task :
+symfony server:start --port=8089
+php bin/console app:eureka:register
+
+LAUNCH gitdock-sentinel : 
+source venv/bin/activate
+python -m uvicorn src.main:app --host 0.0.0.0 --port 8010 --reload
+
+
+ngrok : ngrok http 127.0.0.1:8084
+
+
+
+Spark : http://100.89.63.25:4040
+
+
+=== GITDOCK SENTINEL (AI SECURITY WORKER) ===
+Description : Microservice Python/FastAPI agissant comme chien de garde. Audite les commits en temps réel via LLM, mémorise le code dans ChromaDB et notifie via RabbitMQ/WebSockets.
+
+=== ADRESSES UTILES & ENDPOINTS ===
+URL de Base (API) : http://localhost:8010 (ou IP Ubuntu ex: http://100.89.63.25:8010)
+Swagger UI (Documentation API) : http://localhost:8010/docs
+Healthcheck (Vérifier l'état) : GET http://localhost:8010/api/sentinel/health
+Flush ChromaDB (Purger la mémoire IA) : DELETE http://localhost:8010/api/sentinel/flush-chroma
+WebSocket (Flux temps réel pour le Frontend) : ws://localhost:8010/api/ws/sentinel
+
+=== INFRASTRUCTURE DE COMMUNICATION (MESSAGING & DB) ===
+Kafka Broker (Écoute des commits) : 127.0.0.1:9092
+ -> Topic surveillé : "cleaned-commits"
+ -> Groupe Consommateur : "gitdock-sentinel-group-v4" (Incrémenté si besoin de reset)
+RabbitMQ (Écoute des nouveaux projets) : 100.120.192.92:5672
+ -> Queue dédiée (Fanout) : "gitdock.sentinel.sync.request.queue"
+ -> Routing Key écoutée : "sync.request"
+RabbitMQ (Envoi des rapports d'audit) : 100.120.192.92:5672
+ -> Exchange cible : "gitdock.exchange"
+ -> Routing Key cible : "sentinel.audit.result"
+ChromaDB (Base Vectorielle locale) : http://127.0.0.1:8005
+ -> Collection : "gitdock_code_chunks"
+Ollama (Moteur IA local) : http://100.89.63.25:11434 
+ -> Modèle par défaut : "gemma4:e4b" (Secours: Gemini)
+
+=== COMMANDES DE LANCEMENT (CLI UBUNTU) ===
+LAUNCH GitDock Sentinel (Serveur Principal + Smart Fetcher auto) :
+/home/ubuntu/workspace/gitdock-sentinel/venv/bin/python -m uvicorn src.main:app --host 0.0.0.0 --port 8010 --reload
+
+LAUNCH Chaos Monkey (Simulation de failles - Boucle Infinie) :
+/home/ubuntu/workspace/gitdock-sentinel/venv/bin/python scripts/chaos_producer.py
+
+LAUNCH Chaos Monkey Lite (Simulation de failles - 4 commits ciblés pour Démo) :
+/home/ubuntu/workspace/gitdock-sentinel/venv/bin/python scripts/chaos_producer_lite.py
+
+=== PROCÉDURE DE RESET COMPLET (NETTOYAGE AVANT DÉMO) ===
+1. Tuer les processus fantômes (Ports occupés) : 
+   sudo pkill -9 python
+2. Purger la file Kafka (Lag) : 
+   Aller sur Kafka UI (http://100.89.63.25:8090) -> Topic "cleaned-commits" -> Clear Messages
+3. Purger la base vectorielle ChromaDB : 
+   Ouvrir http://100.89.63.25:8010/docs -> Exécuter DELETE /api/sentinel/flush-chroma
+4. Stopper les scripts parasites : 
+   S'assurer qu'aucun chaos_producer.py ne tourne en arrière-plan.
