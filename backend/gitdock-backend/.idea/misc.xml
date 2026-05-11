@@ -5,6 +5,7 @@
     <option name="originalFiles">
       <list>
         <option value="$PROJECT_DIR$/pom.xml" />
+<<<<<<< HEAD
         <option value="$PROJECT_DIR$/gitdock-discovery/pom.xml" />
         <option value="$PROJECT_DIR$/gitdock-gateway/pom.xml" />
         <option value="$PROJECT_DIR$/gitdock-auth/pom.xml" />
@@ -14,4 +15,11 @@
   <component name="ProjectRootManager" version="2" languageLevel="JDK_17" default="true" project-jdk-name="17" project-jdk-type="JavaSDK">
     <output url="file://$PROJECT_DIR$/out" />
   </component>
+=======
+        <option value="$PROJECT_DIR$/gitdock-notification/pom.xml" />
+      </list>
+    </option>
+  </component>
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_17" default="true" project-jdk-name="17" project-jdk-type="JavaSDK" />
+>>>>>>> f15b548226eb791a8b13956d26c47455fe8cc944
 </project>

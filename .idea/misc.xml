@@ -5,8 +5,21 @@
     <option name="originalFiles">
       <list>
         <option value="$PROJECT_DIR$/backend/gitdock-backend/pom.xml" />
+<<<<<<< HEAD
       </list>
     </option>
+=======
+        <option value="$PROJECT_DIR$/backend/gitdock-backend/gitdock-project/pom.xml" />
+        <option value="$PROJECT_DIR$/gitdock-sync/pom.xml" />
+        <option value="$PROJECT_DIR$/backend/gitdock-backend/gitdock-sync/pom.xml" />
+      </list>
+    </option>
+    <option name="ignoredFiles">
+      <set>
+        <option value="$PROJECT_DIR$/gitdock-sync/pom.xml" />
+      </set>
+    </option>
+>>>>>>> f15b548226eb791a8b13956d26c47455fe8cc944
   </component>
   <component name="ProjectRootManager" version="2" languageLevel="JDK_17" default="true" project-jdk-name="17" project-jdk-type="JavaSDK">
     <output url="file://$PROJECT_DIR$/out" />
