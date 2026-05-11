@@ -28,10 +28,10 @@ spring:
     password: ${RABBITMQ_PASSWORD:guest}
 
   mail:
-    host: ${MAIL_HOST}
-    port: ${MAIL_PORT}
-    username: ${MAIL_USERNAME}
-    password: ${MAIL_PASSWORD}
+    host: smtp.gmail.com
+    port: 587
+    username: rihabaddou1@gmail.com
+    password: qwwhqtlpehdqxexk
     properties:
       mail:
         smtp:

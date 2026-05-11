@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Encoding">
+    <file url="file://$PROJECT_DIR$/backend/gitdock-backend/gitdock-auth/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/backend/gitdock-backend/gitdock-discovery/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/backend/gitdock-backend/gitdock-gateway/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/backend/gitdock-backend/gitdock-notification/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/backend/gitdock-backend/gitdock-project/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/backend/gitdock-backend/gitdock-sync/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/backend/gitdock-backend/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/backend/gitdock-backend/src/main/resources" charset="UTF-8" />
+  </component>
+</project>

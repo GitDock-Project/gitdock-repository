@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="gitdock-gateway" />
+        <module name="gitdock-notification" />
+        <module name="gitdock-sync" />
+        <module name="gitdock-project" />
+        <module name="gitdock-discovery" />
+      </profile>
+      <profile name="Annotation profile for gitdock-backend" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.30/lombok-1.18.30.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.30/lombok-1.18.30.jar" />
+        </processorPath>
+        <module name="gitdock-auth" />
+      </profile>
+    </annotationProcessing>
+  </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="gitdock-auth" options="-parameters" />
+      <module name="gitdock-discovery" options="-parameters" />
+      <module name="gitdock-gateway" options="-parameters" />
+      <module name="gitdock-notification" options="-parameters" />
+      <module name="gitdock-project" options="-parameters" />
+      <module name="gitdock-sync" options="-parameters" />
+    </option>
+  </component>
+</project>
